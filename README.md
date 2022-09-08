@@ -1,5 +1,5 @@
 # Megalo
-## Deno HTTP server framework aiming for maximum speed
+Deno HTTP server framework aiming for maximum speed
 
 ## Example
 ```ts
