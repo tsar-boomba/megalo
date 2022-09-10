@@ -11,8 +11,8 @@
 		}
 	},
 	"tasks": {
-		"bench": "deno run -A --unstable dev.ts & sleep 1 && wrk -t2 -c100 -d30s -R80000 http://127.0.0.1:9000/",
-		"bench:regex": "deno run -A --unstable dev.ts & sleep 1 && wrk -t2 -c100 -d30s -R80000 http://127.0.0.1:9000/regex/path",
-		"bench:pattern": "deno run -A --unstable dev.ts & sleep 1 && wrk -t2 -c100 -d30s -R80000 http://127.0.0.1:9000/pattern/1"
+		"bench": "deno run -A --unstable dev.ts & sleep 1 && oha -z 10s http://127.0.0.1:9000/",
+		"bench:regex": "deno run -A --unstable dev.ts & sleep 1 && oha -z 30s -c 100 --disable-keepalive --latency-correction http://127.0.0.1:9000/regex/path",
+		"bench:pattern": "deno run -A --unstable dev.ts & sleep 1 && oha -z 30s -c 100 --disable-keepalive --latency-correction http://127.0.0.1:9000/pattern/1"
 	}
 }

@@ -14,7 +14,7 @@ const uriRe = /^(([^:\/?#]+):)?(\/\/([^\/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/;
 
 export const parseUrl = (
 	url: string
-): { pathname?: string; rawQuery?: string; query: Record<string, string> } => {
+): { pathname?: string; rawQuery?: string } => {
 	const result = uriRe.exec(url);
 
 	let pathname = result?.[5];
@@ -22,12 +22,11 @@ export const parseUrl = (
 	pathname = pathname ? (pathname.endsWith('/') ? pathname : (pathname + '/')) : undefined;
 
 	const rawQuery = result?.[7];
-	const query = parseQuery(rawQuery ?? '');
 
-	return { pathname, rawQuery, query };
+	return { pathname, rawQuery };
 };
 
-function parseQuery(raw: string): Record<string, string> {
+export const parseQuery = (raw: string): Record<string, string> => {
 	const query = Object.create(null);
 
 	raw = raw.trim();

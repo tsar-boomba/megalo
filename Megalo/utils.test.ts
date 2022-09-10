@@ -6,7 +6,6 @@ Deno.test('Parse URL', () => {
 	const qs = 'query=value&q=s+t';
 	assertEquals(parseUrl(`http://www.example.com${path}?${qs}`), {
 		pathname: path + '/',
-		query: { query: 'value', q: 's t' },
 		rawQuery: qs,
 	});
 });

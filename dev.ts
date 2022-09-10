@@ -1,6 +1,13 @@
+import { Controller } from './Megalo/Controller.ts';
 import { Megalo } from './mod.ts';
 
-const megalo = new Megalo();
+const megalo = new Megalo({
+	notFoundHandler: (req) =>
+		new Response(`<html><body>${req.pathname} not found :(</body></html>`, {
+			status: 404,
+			headers: { ['Content-Type']: 'text/html' },
+		}),
+});
 
 megalo
 	.route('/', () => {
@@ -8,7 +15,7 @@ megalo
 			status: 200,
 			headers: { ['Content-Type']: 'text/html' },
 		});
-	})
+	}, { parseQuery: false })
 	.route('/sus', () => {
 		return new Response('<html><body>sus page</body></html>', {
 			status: 200,
@@ -22,11 +29,5 @@ megalo
 			headers: { ['Content-Type']: 'text/html' },
 		});
 	})
-	.notFound(
-		(req) =>
-			new Response(`<html><body>${req.pathname} not found :(</body></html>`, {
-				status: 404,
-				headers: { ['Content-Type']: 'text/html' },
-			})
-	)
+	.controller(new Controller('/users').route('/', () => new Response('user', { status: 200 })))
 	.serve();
