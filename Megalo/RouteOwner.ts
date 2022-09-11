@@ -19,12 +19,21 @@ export class RouteOwner {
 		this.parseQuery = config.parseQuery ?? true;
 	}
 
-	route(path: string | RegExp, handler: Handler, options?: RouteConfig): this {
+	route(path: string | RegExp, options: RouteConfig, handler: Handler): this;
+	route(path: string | RegExp, handler: Handler): this;
+	route(path: string | RegExp, optionsOrHandler: Handler | RouteConfig, handler?: Handler): this {
 		// convert paths with : in it to url patterns
 		if (typeof path === 'string' && path.includes(':')) path = new PathnamePattern(path) as any;
 
 		// by default uses owner's parseQuery, etc...
-		const route = new Route(path, handler, { parseQuery: this.parseQuery, ...options });
+		const baseOptions = {
+			parseQuery: this.parseQuery,
+		};
+
+		const route =
+			typeof optionsOrHandler === 'function'
+				? new Route(path, optionsOrHandler, baseOptions)
+				: new Route(path, handler!, { ...baseOptions, ...(optionsOrHandler ?? {}) });
 
 		if (route.path.constructor === RegExp) this.regExpRoutes.add(route);
 		else if (route.path.constructor === PathnamePattern) this.patternRoutes.add(route);

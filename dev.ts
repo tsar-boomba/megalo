@@ -10,12 +10,12 @@ const megalo = new Megalo({
 });
 
 megalo
-	.route('/', () => {
+	.route('/', { parseQuery: false }, () => {
 		return new Response('<html><body>hello megalo!</body></html>', {
 			status: 200,
 			headers: { ['Content-Type']: 'text/html' },
 		});
-	}, { parseQuery: false })
+	})
 	.route('/sus', () => {
 		return new Response('<html><body>sus page</body></html>', {
 			status: 200,
