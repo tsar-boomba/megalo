@@ -85,6 +85,7 @@ export class RouteOwner {
 		try {
 			return route.handle(req);
 		} catch (err: unknown) {
+			console.error(err);
 			return (
 				this.errorHandler?.(err, req) ??
 				new Response('Internal Server Error', {

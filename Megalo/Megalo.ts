@@ -1,6 +1,6 @@
-import { MegaloConfig, MegaloRequest } from './types.ts';
-import { parseUrl } from './utils.ts';
+import { MegaloConfig } from './types.ts';
 import { RouteOwner } from './RouteOwner.ts';
+import { createMegaloRequest } from './utils.ts';
 
 export class Megalo extends RouteOwner {
 	private config: MegaloConfig;
@@ -12,16 +12,7 @@ export class Megalo extends RouteOwner {
 
 	serve(opts: Deno.ServeOptions = {}): void {
 		Deno.serve(opts, (req) => {
-			const { pathname, rawQuery } = parseUrl(req.url);
-
-			if (!pathname) return new Response('Malformed URL', { status: 400 });
-
-			(req as MegaloRequest).pathname = pathname;
-			(req as MegaloRequest).query = {};
-			(req as MegaloRequest).rawQuery = rawQuery;
-			(req as MegaloRequest).params = {};
-
-			return super.handle(req as MegaloRequest);
+			return super.handle(createMegaloRequest(req));
 		});
 	}
 }

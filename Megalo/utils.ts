@@ -1,3 +1,5 @@
+import { MegaloRequest } from './types.ts';
+
 /**
  * 0: full string
  * 1: protocol
@@ -12,14 +14,12 @@
  */
 const uriRe = /^(([^:\/?#]+):)?(\/\/([^\/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/;
 
-export const parseUrl = (
-	url: string
-): { pathname?: string; rawQuery?: string } => {
+export const parseUrl = (url: string): { pathname?: string; rawQuery?: string } => {
 	const result = uriRe.exec(url);
 
 	let pathname = result?.[5];
 	// add trailing slash if needed then return
-	pathname = pathname ? (pathname.endsWith('/') ? pathname : (pathname + '/')) : undefined;
+	pathname = pathname ? (pathname.endsWith('/') ? pathname : pathname + '/') : undefined;
 
 	const rawQuery = result?.[7];
 
@@ -33,9 +33,36 @@ export const parseQuery = (raw: string): Record<string, string> => {
 	if (!raw) return query;
 
 	raw.split('&').forEach((pair) => {
-		const [key, value] = pair.replace(/\+/g, ' ').split('=').map((str) => decodeURIComponent(str));
+		const [key, value] = pair
+			.replace(/\+/g, ' ')
+			.split('=')
+			.map((str) => decodeURIComponent(str));
 		query[key] = value;
-	})
+	});
 
 	return query;
-}
+};
+
+export const createMegaloRequest = (req: Request): MegaloRequest => {
+	const { pathname, rawQuery } = parseUrl(req.url);
+
+	// TODO use like nest style error ex. throw new BadRequestError()
+	if (!pathname) throw new Error('Malformed URL');
+
+	(req as MegaloRequest).pathname = pathname;
+	(req as MegaloRequest).query = {};
+	(req as MegaloRequest).rawQuery = rawQuery;
+	(req as MegaloRequest).params = {};
+
+	// scuffed way to get my custom properties to also be cloned
+	req.clone = () => {
+		const cloned = Request.prototype.clone.apply(req) as MegaloRequest;
+		cloned.pathname = (req as MegaloRequest).pathname;
+		cloned.query = { ...(req as MegaloRequest).query };
+		cloned.rawQuery = (req as MegaloRequest).rawQuery;
+		cloned.params = { ...(req as MegaloRequest).params };
+		return cloned;
+	};
+
+	return req as MegaloRequest;
+};
