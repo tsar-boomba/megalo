@@ -16,6 +16,17 @@ export type MegaloRequest = Request & {
 	params: Record<string, string>;
 };
 
+type HookReturn = Response | void | Promise<Response | void>;
+
+export type DefaultHooks = {
+	preHandle: (req: MegaloRequest) => HookReturn;
+	postHandle: (req: MegaloRequest, res: Response) => HookReturn;
+};
+
+export type MegaloHooks = {
+	preParse: (req: Request) => HookReturn;
+} & DefaultHooks;
+
 export type Handler = (req: MegaloRequest) => Promise<Response> | Response;
 
 export type ErrorHandler = (err: unknown, req: MegaloRequest) => Promise<Response> | Response;

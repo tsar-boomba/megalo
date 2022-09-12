@@ -10,6 +10,9 @@ const megalo = new Megalo({
 });
 
 megalo
+	.addHook('preHandle', (req) => {
+		console.log(req.pathname);
+	})
 	.route('/', { parseQuery: false }, () => {
 		return new Response('<html><body>hello megalo!</body></html>', {
 			status: 200,
@@ -29,5 +32,13 @@ megalo
 			headers: { ['Content-Type']: 'text/html' },
 		});
 	})
-	.controller(new Controller('/users').route('/', () => new Response('user', { status: 200 })))
-	.serve();
+	.controller(
+		new Controller('/users')
+			.addHook('preHandle', (req) => {
+				console.log(req.method);
+			})
+			.route('/', () => new Response('user', { status: 200 }))
+	);
+
+console.log(`Startup time: ${performance.now()}ms`);
+megalo.serve();

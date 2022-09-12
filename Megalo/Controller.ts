@@ -1,5 +1,5 @@
-import { RouteOwner, RouteOwnerConfig } from "./RouteOwner.ts";
-import { MegaloRequest } from "./types.ts";
+import { RouteOwner } from "./RouteOwner.ts";
+import { MegaloRequest, RouteOwnerConfig } from "./types.ts";
 
 /**
  * Group related handlers together with shared middleware
