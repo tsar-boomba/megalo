@@ -46,6 +46,12 @@ console.log(`Startup time: ${performance.now()}ms`);
 megalo.serve();
 ```
 
+### Start Server
+Use `--allow-hrtime` for more precise `performance.now()`
+```bash
+deno run --allow-net --allow-hrtime --unstable server.ts
+```
+
 ## Route resolution
 
 Routes are resolved in this order
