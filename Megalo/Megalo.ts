@@ -14,7 +14,6 @@ export class Megalo extends RouteOwner<
 
 	serve(opts: Deno.ServeOptions = {}): void {
 		const preParseHandlers = (this.hooks.get('preParse') ?? []) as MegaloHooks['preParse'][];
-		console.log(this.hooks);
 		Deno.serve(opts, async (req) => {
 			for (let i = 0; i < preParseHandlers.length; i += 1) {
 				const handler = preParseHandlers[i];

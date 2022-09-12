@@ -32,8 +32,11 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 	 * they are executed in insertion order. You can return a response from any hook to
 	 * respond early/overwrite response.
 	 * 
-	 * preParse: Runs right when request is received, before anything is done to it.
-	 * Useful if you want to rewrite the url, for example
+	 * preParse (root only): Runs right when request is received, before anything is done to it.
+	 * 
+	 * postParse: Runs after request is parsed for pathname and rawQuery and 
+	 * before routes are searched for matching handler. Useful
+	 * for when you want to change the pathname or query before a request is handled.
 	 * 
 	 * preHandle: Runs immediately before handler, changing pathname will have no effect on
 	 * what handler is run.
@@ -107,9 +110,17 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 
 	private preHandleHandlers!: DefaultHooks['preHandle'][];
 	private postHandleHandlers!: DefaultHooks['postHandle'][];
+	private postParseHandlers!: DefaultHooks['postParse'][];
 	async handle(req: MegaloRequest, pathname = req.pathname): Promise<Response> {
 		this.preHandleHandlers ??= (this.hooks.get('preHandle') ?? []) as Hooks['preHandle'][];
 		this.postHandleHandlers ??= (this.hooks.get('postHandle') ?? []) as Hooks['postHandle'][];
+		this.postParseHandlers ??= (this.hooks.get('postParse') ?? []) as Hooks['postParse'][];
+
+		for (let i = 0; i < this.postParseHandlers.length; i += 1) {
+			const handler = this.postParseHandlers[i];
+			const result = await handler(req);
+			if (result?.constructor === Response) return result;
+		}
 
 		// check for string literal routes
 		const handler = this.stringRoutes.get(pathname);

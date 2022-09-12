@@ -10,8 +10,8 @@ const megalo = new Megalo({
 });
 
 megalo
-	.addHook('preHandle', (req) => {
-		console.log(req.pathname);
+	.addHook('preParse', (req) => {
+		console.log(req.method);
 	})
 	.route('/', { parseQuery: false }, () => {
 		return new Response('<html><body>hello megalo!</body></html>', {
