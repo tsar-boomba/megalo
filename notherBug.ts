@@ -1,6 +1,5 @@
 // POST, PUT, and PATCH panic deno
-Deno.serve(async (req) => {
+Deno.serve((req) => {
 	console.log(req.method);
-	await req.text();
 	return new Response('Not get method', { status: 200 });
 });
