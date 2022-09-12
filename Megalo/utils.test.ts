@@ -1,5 +1,5 @@
 import { assertEquals } from 'https://deno.land/std@0.154.0/testing/asserts.ts';
-import { parseUrl } from './utils.ts';
+import { parseQuery, parseUrl } from './utils.ts';
 
 Deno.test('Parse URL', () => {
 	const path = '/path/paths';
@@ -8,4 +8,9 @@ Deno.test('Parse URL', () => {
 		pathname: path + '/',
 		rawQuery: qs,
 	});
+});
+
+Deno.test('Parse Querystring', () => {
+	const qs = 'query=string&spaces=encoded+okay';
+	assertEquals(parseQuery(qs), { query: 'string', spaces: 'encoded okay' });
 });

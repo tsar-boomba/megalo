@@ -7,27 +7,37 @@ export type RouteOwnerConfig = {
 
 export type MegaloConfig = {} & RouteOwnerConfig;
 
-export type RouteConfig = {} & Omit<RouteOwnerConfig, 'errorHandler' | 'notFoundHandler'>;
+export type RouteConfig = {
+	metadata?: Record<string, any>;
+	/** What HTTP method this route will handle */
+	method: Methods;
+} & Omit<RouteOwnerConfig, 'errorHandler' | 'notFoundHandler'>;
 
-export type MegaloRequest = Request & {
+export interface MegaloRequest extends Request {
 	pathname: string;
 	query: Record<string, string>;
 	rawQuery?: string;
 	params: Record<string, string>;
-};
+}
 
 type HookReturn = Response | void | Promise<Response | void>;
 
 export type DefaultHooks = {
-	preHandle: (req: MegaloRequest) => HookReturn;
-	postHandle: (req: MegaloRequest, res: Response) => HookReturn;
-	postParse: (req: MegaloRequest) => HookReturn;
+	preHandle: (req: MegaloRequest, metadata?: Record<string, string>) => HookReturn;
+	postHandle: (
+		req: MegaloRequest,
+		res: Response,
+		metadata?: Record<string, string>
+	) => HookReturn;
+	preRoute: (req: MegaloRequest) => HookReturn;
 };
 
 export type MegaloHooks = {
 	preParse: (req: Request) => HookReturn;
 	
 } & DefaultHooks;
+
+export type Methods = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'OPTIONS' | 'ANY';
 
 export type Handler = (req: MegaloRequest) => Promise<Response> | Response;
 

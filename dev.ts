@@ -10,35 +10,30 @@ const megalo = new Megalo({
 });
 
 megalo
-	.addHook('preParse', (req) => {
-		console.log(req.method);
-	})
-	.route('/', { parseQuery: false }, () => {
+	.get('/', { parseQuery: false }, () => {
 		return new Response('<html><body>hello megalo!</body></html>', {
 			status: 200,
 			headers: { ['Content-Type']: 'text/html' },
 		});
 	})
-	.route('/sus', () => {
+	.get('/sus', () => {
 		return new Response('<html><body>sus page</body></html>', {
 			status: 200,
 			headers: { ['Content-Type']: 'text/html' },
 		});
 	})
-	.route(/^\/regex(\/.*)?$/, () => new Response(undefined, { status: 200 }))
-	.route('/pattern/:id', ({ params }) => {
+	.get(/^\/regex(\/.*)?$/, () => new Response(undefined, { status: 200 }))
+	.get('/pattern/:id', ({ params }) => {
 		return new Response(`<html><body>id: ${params.id}</body></html>`, {
 			status: 200,
 			headers: { ['Content-Type']: 'text/html' },
 		});
 	})
-	.controller(
-		new Controller('/users')
-			.addHook('preHandle', (req) => {
-				console.log(req.method);
-			})
-			.route('/', () => new Response('user', { status: 200 }))
-	);
+	.post('/posted', async (req) => {
+		await req.text();
+		return new Response('you posted it :)', { status: 200 });
+	})
+	.controller(new Controller('/users').get('/', () => new Response('user', { status: 200 })));
 
 console.log(`Startup time: ${performance.now()}ms`);
 megalo.serve();
