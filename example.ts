@@ -1,5 +1,6 @@
 import { cors } from './Megalo/plugins/cors.ts';
 import { Megalo, Controller } from './mod.ts';
+import { parse } from 'https://deno.land/std@0.155.0/flags/mod.ts';
 
 const megalo = new Megalo({
 	// optionally add a notFoundHandler
@@ -51,7 +52,6 @@ megalo
 
 console.log(`Startup time: ${performance.now()}ms`);
 
-import { parse } from 'https://deno.land/std@0.155.0/flags/mod.ts';
 const { serve } = parse(Deno.args, { alias: { s: 'serve' } });
 serve
 	? megalo.serve({ port: 9000, hostname: '127.0.0.1' })
