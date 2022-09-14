@@ -95,33 +95,30 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 			const strPath = path.toString();
 			const existingRoute = this.regExpRoutes.get(strPath);
 			if (!existingRoute) {
-				const route = new Route(path, finalOptions);
+				const route = new Route(path);
 				this.regExpRoutes.set(strPath, route);
-				route.handlers.set(finalOptions.method, handler);
+				route.handlers.set(finalOptions.method, { handler, config: finalOptions });
 			} else {
-				existingRoute.handlers.set(finalOptions.method, handler);
+				existingRoute.handlers.set(finalOptions.method, { handler, config: finalOptions });
 			}
 		} else if (isPattern) {
 			const existingRoute = this.patternRoutes.get(path as string);
 			if (!existingRoute) {
-				const route = new Route(path, {
-					...baseOptions,
-					...options,
-				});
+				const route = new Route(path);
 				this.patternRoutes.set(path as string, route);
-				route.handlers.set(finalOptions.method, handler);
+				route.handlers.set(finalOptions.method, { handler, config: finalOptions });
 			} else {
-				existingRoute.handlers.set(finalOptions.method, handler);
+				existingRoute.handlers.set(finalOptions.method, { handler, config: finalOptions });
 			}
 		} else {
 			(path as string).endsWith('/') ? path : (path += '/');
 			const existingRoute = this.stringRoutes.get(path as string);
 			if (!existingRoute) {
-				const route = new Route(path, finalOptions);
+				const route = new Route(path);
 				this.stringRoutes.set(path as string, route);
-				route.handlers.set(finalOptions.method, handler);
+				route.handlers.set(finalOptions.method, { handler, config: finalOptions });
 			} else {
-				existingRoute.handlers.set(finalOptions.method, handler);
+				existingRoute.handlers.set(finalOptions.method, { handler, config: finalOptions });
 			}
 		}
 

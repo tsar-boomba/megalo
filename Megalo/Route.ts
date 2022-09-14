@@ -4,25 +4,20 @@ import { parseQuery } from './utils.ts';
 
 export class Route {
 	path: string | RegExp | PathnamePattern;
-	handlers: Map<Methods, Handler> = new Map();
-	config: RouteConfig;
+	handlers: Map<Methods, { handler: Handler; config: RouteConfig }> = new Map();
 	metadata?: Record<string, any>;
 
-	constructor(
-		path: string | RegExp | PathnamePattern,
-		config: RouteConfig = { method: 'ANY' }
-	) {
+	constructor(path: string | RegExp | PathnamePattern) {
 		// always use trailing slash
 		if (typeof path === 'string') path.endsWith('/') ? null : (path += '/');
 
 		this.path = path;
-		this.metadata = config.metadata;
-		this.config = config;
 	}
 
 	handle(req: MegaloRequest): Response | Promise<Response> {
-		if (req.rawQuery && this.config.parseQuery) req.query = parseQuery(req.rawQuery);
-		const handler = this.handlers.get(req.method.toUpperCase() as Methods) ?? this.handlers.get('ANY');
-		return handler!(req);
+		const handler = (this.handlers.get(req.method.toUpperCase() as Methods) ??
+			this.handlers.get('ANY')) as { handler: Handler; config: RouteConfig };
+		if (req.rawQuery && handler.config.parseQuery) req.query = parseQuery(req.rawQuery);
+		return handler.handler(req);
 	}
 }

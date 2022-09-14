@@ -15,7 +15,7 @@ export type RouteConfig = {
 	metadata?: Record<string, any>;
 	/** What HTTP method this route will handle */
 	method: Methods;
-} & Omit<RouteOwnerConfig, 'errorHandler' | 'notFoundHandler'>;
+} & Omit<RouteOwnerConfig, 'errorHandler' | 'notFoundHandler' | 'plugins'>;
 
 export interface MegaloRequest extends Request {
 	pathname: string;
