@@ -19,7 +19,7 @@ const megalo = new Megalo({
 
 megalo
 	.get('/', { parseQuery: false }, () => {
-		return new Response('<html><body>hello megalo!</body></html>', {
+		return new Response('hello megalo!', {
 			status: 200,
 			headers: { ['Content-Type']: 'text/html' },
 		});
@@ -28,14 +28,14 @@ megalo
 		return new Response('Secret handler', { status: 200 });
 	})
 	.get('/sus', () => {
-		return new Response('<html><body>sus page</body></html>', {
+		return new Response('sus page', {
 			status: 200,
 			headers: { ['Content-Type']: 'text/html' },
 		});
 	})
 	.get(/^\/regex(\/.*)?$/, () => new Response(undefined, { status: 200 }))
 	.get('/pattern/:id', ({ params }) => {
-		return new Response(`<html><body>id: ${params.id}</body></html>`, {
+		return new Response(`id: ${params.id}`, {
 			status: 200,
 			headers: { ['Content-Type']: 'text/html' },
 		});
