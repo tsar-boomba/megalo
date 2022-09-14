@@ -17,6 +17,13 @@ const megalo = new Megalo({
 	plugins: [cors({ origin: 'http://127.0.0.1:9000' })]
 });
 
+const headers = new Headers();
+
+headers.append('Vary', 'Encoding');
+headers.append('Vary', 'Origin');
+console.log(headers);
+
+
 megalo
 	.get('/', { parseQuery: false }, () => {
 		return new Response('<html><body>hello megalo!</body></html>', {

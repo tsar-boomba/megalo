@@ -4,10 +4,10 @@ import { Plugin } from './types.ts';
 export type CorsPluginOptions = {
 	/**
 	 * Access-Control-Allow-Origin
-	 * 
+	 *
 	 * You can set this to '*', a specific origin, an array of origins, or regex or an array of regex
 	 */
-	origin: string | RegExp | RegExp[] | string[];
+	origin: string | RegExp | (string | RegExp)[];
 	/**
 	 * Access-Control-Allow-Headers
 	 *
@@ -38,15 +38,22 @@ export type CorsPluginOptions = {
 	 * Defaults to false
 	 */
 	credentials?: boolean;
+	/**
+	 * Provides a status code to use for successful OPTIONS requests,
+	 * since some legacy browsers (IE11) can't use 204.
+	 *
+	 * Defaults to 204
+	 */
+	optionsSuccessStatus?: number;
 };
 
 /**
- * Add a route to handle OPTIONS requests and headers 
+ * Add a route to handle OPTIONS requests and headers
  * and a postHandle hook to add headers to non-options requests
  *
  * Please check out the docs for more info on CORS https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
  * @param opts Config object
- * @returns Plugin which will handle OPTIONS requests and respond which configured headers
+ * @returns Plugin which will handle OPTIONS requests and respond to all requests with configured headers
  */
 export const cors = ({
 	origin: allowedOrigin,
@@ -55,6 +62,7 @@ export const cors = ({
 	exposeHeaders,
 	maxAge,
 	methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD'],
+	optionsSuccessStatus = 204,
 }: CorsPluginOptions): Plugin<MegaloHooks> => {
 	methods = methods.map((m) => m.toUpperCase());
 	const allowedIsString = typeof allowedOrigin === 'string';
@@ -92,7 +100,7 @@ export const cors = ({
 					? origin
 					: 'false');
 			return new Response(undefined, {
-				status: 400,
+				status: optionsSuccessStatus,
 				headers: resHeaders,
 			});
 		});
