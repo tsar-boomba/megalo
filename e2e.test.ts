@@ -34,6 +34,15 @@ Deno.test('end-2-end', async () => {
 		res = await fetch(serverUrl + '/users');
 		result = await res.text();
 		assertEquals(result, 'user');
+
+		res = await fetch(serverUrl + '/users/999');
+		result = await res.text();
+		assertEquals(result, 'user id: 999');
+
+		res = await fetch(serverUrl + '/does-not-exist');
+		result = await res.text();
+		assertEquals(result, '/does-not-exist/ not found :(');
+		assertEquals(res.status, 404);
 	} catch (err) {
 		serverProc.close();
 		throw err;

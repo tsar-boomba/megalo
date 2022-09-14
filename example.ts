@@ -4,7 +4,7 @@ import { Megalo, Controller } from './mod.ts';
 const megalo = new Megalo({
 	// optionally add a notFoundHandler
 	notFoundHandler: (req) =>
-		new Response(`<html><body>${req.pathname} not found :(</body></html>`, {
+		new Response(`${req.pathname} not found :(`, {
 			status: 404,
 			headers: { ['Content-Type']: 'text/html' },
 		}),
@@ -12,9 +12,9 @@ const megalo = new Megalo({
 	errorHandler: (_err, _req, httpErr) => {
 		// if NotFoundError, etc. was thrown
 		if (httpErr) return httpErr.toResponse();
-		return new Response('Internal Server Error', { status: 500 })
+		return new Response('Internal Server Error', { status: 500 });
 	},
-	plugins: [cors({ origin: 'http://127.0.0.1:9000' })]
+	plugins: [cors({ origin: 'http://127.0.0.1:9000' })],
 });
 
 megalo
@@ -43,7 +43,11 @@ megalo
 	.post('/posted', () => {
 		return new Response('you posted it :)', { status: 200 });
 	})
-	.controller(new Controller('/users').get('/', () => new Response('user', { status: 200 })));
+	.controller(
+		new Controller('/users')
+			.get('/', () => new Response('user', { status: 200 }))
+			.get('/:id', (req) => new Response(`user id: ${req.params.id}`, { status: 200 }))
+	);
 
 console.log(`Startup time: ${performance.now()}ms`);
 await megalo.listen({ port: 9000, hostname: '127.0.0.1' });

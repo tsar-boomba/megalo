@@ -257,7 +257,7 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 
 		// check controllers
 		for (const controller of this.controllers.values()) {
-			if (controller.path.startsWith(pathname)) {
+			if (pathname.startsWith(controller.path)) {
 				const controllerRes = await controller.handle(req);
 
 				// run postHandle hooks
@@ -273,7 +273,7 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 
 		// check urlpatterns
 		for (const route of this.patternRoutes.values()) {
-			const patternResult = (route.path as PathnamePattern).exec(req.pathname);
+			const patternResult = (route.path as PathnamePattern).exec(pathname);
 			if (patternResult && (route.handlers.get(method) || route.handlers.get('ANY'))) {
 				req.params = patternResult;
 				return this.runHandler(req, route);
@@ -283,7 +283,7 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 		// check regex routes now
 		for (const route of this.regExpRoutes.values()) {
 			if (
-				(route.path as RegExp).test(req.pathname) &&
+				(route.path as RegExp).test(pathname) &&
 				(route.handlers.get(method) || route.handlers.get('ANY'))
 			)
 				return this.runHandler(req, route);

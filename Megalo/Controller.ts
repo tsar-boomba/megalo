@@ -1,5 +1,5 @@
-import { RouteOwner } from "./RouteOwner.ts";
-import { MegaloRequest, RouteOwnerConfig } from "./types.ts";
+import { RouteOwner } from './RouteOwner.ts';
+import { MegaloRequest, RouteOwnerConfig } from './types.ts';
 
 /**
  * Group related handlers together with shared middleware
@@ -12,13 +12,14 @@ export class Controller extends RouteOwner {
 	 */
 	constructor(path: string, config: RouteOwnerConfig = {}) {
 		super(config);
-		path.endsWith('/') ? path : path += '/';
+		path.endsWith('/') ? path : (path += '/');
 		this.path = path;
 	}
 
-	handle(req: MegaloRequest): Promise<Response> {
-		let truncatedPathname = req.pathname.replace(this.path, '');
-		if (truncatedPathname.length <= 0) truncatedPathname = '/';
+	handle(req: MegaloRequest, pathname: string = req.pathname): Promise<Response> {
+		console.log(pathname);
+		const truncatedPathname = pathname.replace(this.path, '/');
+		console.log(truncatedPathname);
 
 		return super.handle(req, truncatedPathname);
 	}
