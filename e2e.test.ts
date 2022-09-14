@@ -6,7 +6,7 @@ Deno.test('end-2-end', async () => {
 	});
 	// wait for server to start
 	await new Promise((resolve) => setTimeout(resolve, 1000));
-	const serverUrl = 'http://127.0.0.1:9000/';
+	const serverUrl = 'http://127.0.0.1:9000';
 
 	try {
 		let res = await fetch(serverUrl + '/');
