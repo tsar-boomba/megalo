@@ -1,3 +1,4 @@
+import { cors } from './Megalo/plugins/cors.ts';
 import { Megalo, Controller } from './mod.ts';
 
 const megalo = new Megalo({
@@ -12,7 +13,8 @@ const megalo = new Megalo({
 		// if NotFoundError, etc. was thrown
 		if (httpErr) return httpErr.toResponse();
 		return new Response('Internal Server Error', { status: 500 })
-	}
+	},
+	plugins: [cors({ origin: 'http://127.0.0.1:9000' })]
 });
 
 megalo

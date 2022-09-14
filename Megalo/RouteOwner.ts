@@ -22,11 +22,13 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 	protected patternRoutes: Map<string, Route> = new Map();
 	protected hooks: Map<keyof Hooks, Hooks[keyof Hooks][]> = new Map();
 
-	constructor(config: RouteOwnerConfig) {
+	constructor(config: RouteOwnerConfig<Hooks>) {
 		this.notFoundHandler = config.notFoundHandler;
 		this.errorHandler = config.errorHandler;
 		// default to true
 		this.parseQuery = config.parseQuery ?? true;
+
+		config.plugins?.forEach((plugin) => plugin(this));
 	}
 
 	/**
@@ -288,6 +290,11 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 				(route.handlers.get(method) || route.handlers.get('ANY'))
 			)
 				return this.runHandler(req, route);
+		}
+
+		const wildCard = this.stringRoutes.get('*');
+		if (wildCard && (wildCard.handlers.get(method) || wildCard.handlers.get('ANY'))) {
+			return this.runHandler(req, wildCard);
 		}
 
 		return this.notFoundHandler?.(req) ?? new Response(undefined, { status: 404 });

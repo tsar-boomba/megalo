@@ -68,6 +68,7 @@ Routes are resolved in this order
 - controllers ex. `new Controller("/users")`
 - patterns ex. `"/users/:id"`
 - regex ex. `/^.*\/regex\/.*\/?$/`
+- wildcard (You can only have one of these per method) `"*"`
 - notFoundHandler
 
 ## Error Throwing
