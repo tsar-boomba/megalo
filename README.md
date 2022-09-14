@@ -6,44 +6,53 @@ Deno HTTP server framework aiming for maximum speed
 import { Megalo, Controller } from 'https://deno.land/x/megalo/mod.ts';
 
 const megalo = new Megalo({
-	notFoundHandler: (req) =>
-		new Response(`<html><body>${req.pathname} not found :(</body></html>`, {
-			status: 404,
-			headers: { ['Content-Type']: 'text/html' },
-		}),
+    // optionally add a notFoundHandler
+    notFoundHandler: (req) =>
+        new Response(`<html><body>${req.pathname} not found :(</body></html>`, {
+            status: 404,
+            headers: { ['Content-Type']: 'text/html' },
+        }),
+    // optionally add an errorHandler
+    errorHandler: (err, req, httpErr) => {
+        // if NotFoundError, etc. was thrown
+        if (httpErr) return httpErr.toResponse();
+        return new Response('Internal Server Error', { status: 500 })
+    }
 });
 
 megalo
-	// route all requests to '/'
-	.addHook('preRoute', (req) => (req.pathname = '/'))
-	.get('/', { parseQuery: false }, () => {
-		return new Response('<html><body>hello megalo!</body></html>', {
-			status: 200,
-			headers: { ['Content-Type']: 'text/html' },
-		});
-	})
-	.get('/sus', () => {
-		return new Response('<html><body>sus page</body></html>', {
-			status: 200,
-			headers: { ['Content-Type']: 'text/html' },
-		});
-	})
-	.get(/^\/regex(\/.*)?$/, () => new Response(undefined, { status: 200 }))
-	.get('/pattern/:id', ({ params }) => {
-		return new Response(`<html><body>id: ${params.id}</body></html>`, {
-			status: 200,
-			headers: { ['Content-Type']: 'text/html' },
-		});
-	})
-	.post('/posted', async (req) => {
-		await req.text();
-		return new Response('you posted it :)', { status: 200 });
-	})
-	.controller(new Controller('/users').get('/', () => new Response('user', { status: 200 })));
+    // route all requests to '/'
+    .addHook('preRoute', (req) => (req.pathname = '/'))
+    .get('/', { parseQuery: false }, () => {
+        return new Response('<html><body>hello megalo!</body></html>', {
+            status: 200,
+            headers: { ['Content-Type']: 'text/html' },
+        });
+    })
+    .post('/', (req) => {
+        return new Response('Secret handler', { status: 200 });
+    })
+    .get('/sus', () => {
+        return new Response('<html><body>sus page</body></html>', {
+            status: 200,
+            headers: { ['Content-Type']: 'text/html' },
+        });
+    })
+    .get(/^\/regex(\/.*)?$/, () => new Response(undefined, { status: 200 }))
+    .get('/pattern/:id', ({ params }) => {
+        return new Response(`<html><body>id: ${params.id}</body></html>`, {
+            status: 200,
+            headers: { ['Content-Type']: 'text/html' },
+        });
+    })
+    .post('/posted', (req) => {
+        return new Response('you posted it :)', { status: 200 });
+    })
+    .controller(new Controller('/users').get('/', () => new Response('user', { status: 200 })));
 
-// fast startup
+// log startup time
 console.log(`Startup time: ${performance.now()}ms`);
-megalo.serve();
+megalo.listen({ port: 9000, hostname: '127.0.0.1' });
 ```
 
 ### Start Server
@@ -60,6 +69,22 @@ Routes are resolved in this order
 - patterns ex. `"/users/:id"`
 - regex ex. `/^.*\/regex\/.*\/?$/`
 - notFoundHandler
+
+## Error Throwing
+
+You can throw special exported errors to have the response status and body automatically set.
+```ts
+import { Megalo, InternalServerError } from 'https://deno.land/x/megalo/mod.ts';
+
+const megalo = new Megalo();
+
+megalo.get((req) => {
+    throw new InternalServerError({ message: 'uh oh' });
+    return new Response(undefined, { status: 200 });
+});
+
+megalo.listen({ port: 9000, hostname: '127.0.0.1' });
+```
 
 ## Notes
 

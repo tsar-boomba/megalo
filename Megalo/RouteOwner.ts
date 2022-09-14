@@ -10,6 +10,7 @@ import {
 	RouteConfig,
 	RouteOwnerConfig,
 } from './types.ts';
+import { HttpError } from './HttpError.ts';
 
 export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 	protected parseQuery: boolean;
@@ -315,14 +316,18 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 
 			return handlerRes;
 		} catch (err: unknown) {
-			console.error(err);
-			return (
-				this.errorHandler?.(err, req) ??
-				new Response('Internal Server Error', {
-					status: 500,
-					statusText: 'Internal Server Error',
-				})
-			);
+			return this.handleErr(err, req);
 		}
+	}
+
+	protected handleErr(err: unknown, req: MegaloRequest): Response | Promise<Response> {
+		let httpErr: HttpError | undefined;
+		if (err instanceof HttpError) httpErr = err;
+		if (this.errorHandler) return this.errorHandler(err, req, httpErr);
+		console.error(err);
+
+		return httpErr
+			? httpErr.toResponse()
+			: new Response('An internal server error ocurred.', { status: 500 });
 	}
 }

@@ -1,3 +1,5 @@
+import { HttpError } from './HttpError.ts';
+
 export type RouteOwnerConfig = {
 	errorHandler?: ErrorHandler;
 	notFoundHandler?: Handler;
@@ -34,11 +36,14 @@ export type DefaultHooks = {
 
 export type MegaloHooks = {
 	preParse: (req: Request) => HookReturn;
-	
 } & DefaultHooks;
 
 export type Methods = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'OPTIONS' | 'ANY';
 
 export type Handler = (req: MegaloRequest) => Promise<Response> | Response;
 
-export type ErrorHandler = (err: unknown, req: MegaloRequest) => Promise<Response> | Response;
+export type ErrorHandler = (
+	err: unknown,
+	req: MegaloRequest,
+	httpErr?: HttpError
+) => Promise<Response> | Response;

@@ -1,12 +1,18 @@
-import { Controller } from './Megalo/Controller.ts';
-import { Megalo } from './mod.ts';
+import { Megalo, Controller } from './mod.ts';
 
 const megalo = new Megalo({
+	// optionally add a notFoundHandler
 	notFoundHandler: (req) =>
 		new Response(`<html><body>${req.pathname} not found :(</body></html>`, {
 			status: 404,
 			headers: { ['Content-Type']: 'text/html' },
 		}),
+	// optionally add an errorHandler
+	errorHandler: (_err, _req, httpErr) => {
+		// if NotFoundError, etc. was thrown
+		if (httpErr) return httpErr.toResponse();
+		return new Response('Internal Server Error', { status: 500 })
+	}
 });
 
 megalo
@@ -15,6 +21,9 @@ megalo
 			status: 200,
 			headers: { ['Content-Type']: 'text/html' },
 		});
+	})
+	.post('/', () => {
+		return new Response('Secret handler', { status: 200 });
 	})
 	.get('/sus', () => {
 		return new Response('<html><body>sus page</body></html>', {
@@ -29,11 +38,10 @@ megalo
 			headers: { ['Content-Type']: 'text/html' },
 		});
 	})
-	.post('/posted', async (req) => {
-		await req.text();
+	.post('/posted', () => {
 		return new Response('you posted it :)', { status: 200 });
 	})
 	.controller(new Controller('/users').get('/', () => new Response('user', { status: 200 })));
 
 console.log(`Startup time: ${performance.now()}ms`);
-megalo.serve();
+await megalo.listen({ port: 9000, hostname: '127.0.0.1' });
