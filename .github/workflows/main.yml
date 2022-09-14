@@ -17,6 +17,7 @@ jobs:
         with:
           crate: oha
           version: 0.5.4
+          use-tool-cache: true
       - name: Run Benchmark
         run: deno task bench http://127.0.0.1:9000/
   test:
