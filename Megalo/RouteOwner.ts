@@ -76,7 +76,11 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 		return this;
 	}
 
-	private route(path: string | RegExp, options: RouteConfig, handler: Handler): this {
+	private route(
+		path: string | RegExp | PathnamePattern,
+		options: RouteConfig,
+		handler: Handler
+	): this {
 		// convert paths with : in it to url patterns
 		const isPattern = typeof path === 'string' && path.includes(':');
 		if (isPattern) path = new PathnamePattern(path as string) as any;
@@ -102,10 +106,10 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 				existingRoute.handlers.set(finalOptions.method, { handler, config: finalOptions });
 			}
 		} else if (isPattern) {
-			const existingRoute = this.patternRoutes.get(path as string);
+			const existingRoute = this.patternRoutes.get((path as PathnamePattern).pattern);
 			if (!existingRoute) {
 				const route = new Route(path);
-				this.patternRoutes.set(path as string, route);
+				this.patternRoutes.set((path as PathnamePattern).pattern, route);
 				route.handlers.set(finalOptions.method, { handler, config: finalOptions });
 			} else {
 				existingRoute.handlers.set(finalOptions.method, { handler, config: finalOptions });
@@ -232,20 +236,48 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 		return this;
 	}
 
+	private controllerArr!: Controller[];
+	private patternArr!: Route[];
+	private regExpArr!: Route[];
 	private preHandleHandlers!: DefaultHooks['preHandle'][];
 	private postHandleHandlers!: DefaultHooks['postHandle'][];
 	private preRouteHandlers!: DefaultHooks['preRoute'][];
+
+	private firstReq = true;
+	private initHandling() {
+		// convert routes into arrays
+		this.controllerArr = this.controllerArr
+			? this.controllerArr
+			: Array.from(this.controllers.values());
+		this.patternArr = this.patternArr
+			? this.patternArr
+			: Array.from(this.patternRoutes.values());
+		this.regExpArr = this.regExpArr ? this.regExpArr : Array.from(this.regExpRoutes.values());
+
+		// init hooks
+		this.preHandleHandlers = (this.hooks.get('preHandle') ?? []) as Hooks['preHandle'][];
+		this.postHandleHandlers = (this.hooks.get('postHandle') ?? []) as Hooks['postHandle'][];
+		this.preRouteHandlers = (this.hooks.get('preRoute') ?? []) as Hooks['preRoute'][];
+
+		this.firstReq = false;
+	}
+
 	async handle(req: MegaloRequest, pathname = req.pathname): Promise<Response> {
 		const method = req.method.toUpperCase() as Methods;
-		this.preHandleHandlers ??= (this.hooks.get('preHandle') ?? []) as Hooks['preHandle'][];
-		this.postHandleHandlers ??= (this.hooks.get('postHandle') ?? []) as Hooks['postHandle'][];
-		this.preRouteHandlers ??= (this.hooks.get('preRoute') ?? []) as Hooks['preRoute'][];
+
+		// changes pattern & regex route map to array and get hooks
+		this.firstReq && this.initHandling();
 
 		// run preRoute hooks
 		for (let i = 0; i < this.preRouteHandlers.length; i += 1) {
 			const handler = this.preRouteHandlers[i];
-			const result = await handler(req);
-			if (result?.constructor === Response) return result;
+			const result = handler(req);
+			if (result?.constructor === Promise) {
+				const awaitedResult = await result;
+				if (awaitedResult?.constructor === Response) return awaitedResult;
+			} else {
+				if (result?.constructor === Response) return result;
+			}
 		}
 
 		// check for string literal routes
@@ -256,15 +288,21 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 		}
 
 		// check controllers
-		for (const controller of this.controllers.values()) {
+		for (let i = 0; i < this.controllerArr.length; i += 1) {
+			const controller = this.controllerArr[i];
 			if (pathname.startsWith(controller.path)) {
 				const controllerRes = await controller.handle(req);
 
 				// run postHandle hooks
 				for (let i = 0; i < this.postHandleHandlers.length; i += 1) {
 					const handler = this.postHandleHandlers[i];
-					const result = await handler(req, controllerRes);
-					if (result?.constructor === Response) return result;
+					const result = handler(req, controllerRes);
+					if (result?.constructor === Promise) {
+						const awaitedResult = await result;
+						if (awaitedResult?.constructor === Response) return awaitedResult;
+					} else {
+						if (result?.constructor === Response) return result;
+					}
 				}
 
 				return controllerRes;
@@ -272,7 +310,8 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 		}
 
 		// check urlpatterns
-		for (const route of this.patternRoutes.values()) {
+		for (let i = 0; i < this.patternArr.length; i += 1) {
+			const route = this.patternArr[i];
 			const patternResult = (route.path as PathnamePattern).exec(pathname);
 			if (patternResult && (route.handlers.get(method) || route.handlers.get('ANY'))) {
 				req.params = patternResult;
@@ -281,7 +320,8 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 		}
 
 		// check regex routes now
-		for (const route of this.regExpRoutes.values()) {
+		for (let i = 0; i < this.regExpArr.length; i += 1) {
+			const route = this.regExpArr[i];
 			if (
 				(route.path as RegExp).test(pathname) &&
 				(route.handlers.get(method) || route.handlers.get('ANY'))
@@ -298,15 +338,20 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 	}
 
 	/**
-	 * Handles running middleware & handler and handling error
+	 * Handles running hooks & handler and handling error
 	 */
 	protected async runHandler(req: MegaloRequest, route: Route): Promise<Response> {
 		try {
 			// run preHandleHooks
 			for (let i = 0; i < this.preHandleHandlers.length; i += 1) {
 				const handler = this.preHandleHandlers[i];
-				const result = await handler(req, route.metadata);
-				if (result?.constructor === Response) return result;
+				const result = handler(req, route.metadata);
+				if (result?.constructor === Promise) {
+					const awaitedResult = await result;
+					if (awaitedResult?.constructor === Response) return awaitedResult;
+				} else {
+					if (result?.constructor === Response) return result;
+				}
 			}
 
 			const handlerRes = await route.handle(req);
@@ -314,8 +359,13 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 			// run postHandle hooks
 			for (let i = 0; i < this.postHandleHandlers.length; i += 1) {
 				const handler = this.postHandleHandlers[i];
-				const result = await handler(req, handlerRes, route.metadata);
-				if (result?.constructor === Response) return result;
+				const result = handler(req, handlerRes, route.metadata);
+				if (result?.constructor === Promise) {
+					const awaitedResult = await result;
+					if (awaitedResult?.constructor === Response) return awaitedResult;
+				} else {
+					if (result?.constructor === Response) return result;
+				}
 			}
 
 			return handlerRes;

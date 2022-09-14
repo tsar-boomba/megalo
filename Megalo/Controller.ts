@@ -17,9 +17,7 @@ export class Controller extends RouteOwner {
 	}
 
 	handle(req: MegaloRequest, pathname: string = req.pathname): Promise<Response> {
-		console.log(pathname);
 		const truncatedPathname = pathname.replace(this.path, '/');
-		console.log(truncatedPathname);
 
 		return super.handle(req, truncatedPathname);
 	}

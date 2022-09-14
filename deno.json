@@ -5,6 +5,11 @@
 			"singleQuote": true
 		}
 	},
+	"test": {
+		"files": {
+			"exclude": ["bench.ts"]
+		}
+	},
 	"lint": {
 		"rules": {
 			"exclude": ["ban-types", "no-explicit-any"]

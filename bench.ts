@@ -6,7 +6,8 @@ const listenProc = Deno.run({
 });
 await wait(500);
 const ohaListenProc = Deno.run({
-	cmd: ['oha', '-z', '10s', '--no-tui', Deno.args[0]]
+	cmd: ['oha', '-z', '10s', '--no-tui', Deno.args[0]],
+	stdout: 'inherit',
 });
 
 await ohaListenProc.status().then(() => listenProc.close());
@@ -18,6 +19,7 @@ const serveProc = Deno.run({
 await wait(500);
 const ohaServeProc = Deno.run({
 	cmd: ['oha', '-z', '10s', '--no-tui', Deno.args[0]],
+	stdout: 'inherit'
 });
 
 ohaServeProc.status().then(() => serveProc.close());

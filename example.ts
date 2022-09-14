@@ -41,6 +41,8 @@ megalo
 			headers: { ['Content-Type']: 'text/html' },
 		});
 	})
+	.get('/ptrn/:id', () => new Response(undefined, { status: 200 }))
+	.get('/pat/:id', () => new Response(undefined, { status: 200 }))
 	.post('/posted', () => {
 		return new Response('you posted it :)', { status: 200 });
 	})

@@ -65,6 +65,7 @@ export const cors = ({
 }: CorsPluginOptions): Plugin => {
 	methods = methods.map((m) => m.toUpperCase());
 	const allowedIsString = typeof allowedOrigin === 'string';
+	const allowedIsArray = Array.isArray(allowedOrigin);
 
 	const headersString = headers.join(',');
 	const methodsString = methods.join(',');
@@ -80,7 +81,7 @@ export const cors = ({
 	!allowedIsString && (resHeaders['Vary'] = 'Origin');
 
 	const originMatches = (origin: string): boolean => {
-		if (Array.isArray(allowedOrigin)) {
+		if (allowedIsArray) {
 			return allowedOrigin.some((match) =>
 				match.constructor === RegExp ? match.test(origin) : match === origin
 			);
@@ -106,9 +107,9 @@ export const cors = ({
 		owner.addHook('postHandle', (req, res) => {
 			const origin = req.headers.get('Origin') ?? '';
 			credentials !== undefined &&
-				res.headers.append('Access-Control-Allow-Credentials', credentials.toString());
+				res.headers.set('Access-Control-Allow-Credentials', credentials.toString());
 			!allowedIsString &&
-				res.headers.append(
+				res.headers.set(
 					'Access-Control-Allow-Origin',
 					originMatches(origin) ? origin : 'false'
 				);
