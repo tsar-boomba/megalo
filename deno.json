@@ -11,7 +11,6 @@
 		}
 	},
 	"tasks": {
-		"bench": "deno run -A --unstable example.ts & sleep 1 && oha -z 30s",
-		"bench:serve": "deno run -A --unstable example.ts --serve & sleep 0.5 && oha -z 30s"
+		"bench": "deno run -A bench.ts"
 	}
 }

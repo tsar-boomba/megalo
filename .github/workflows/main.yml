@@ -18,9 +18,7 @@ jobs:
           crate: oha
           version: 0.5.4
       - name: Run Benchmark
-        run: |
-          deno task bench 'http://127.0.0.1:9000/'
-          deno task bench:serve 'http://127.0.0.1:9000/'
+        run: deno task bench http://127.0.0.1:9000/
   test:
     name: Test
     runs-on: ubuntu-latest
