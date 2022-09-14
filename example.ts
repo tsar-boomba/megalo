@@ -50,4 +50,4 @@ megalo
 	);
 
 console.log(`Startup time: ${performance.now()}ms`);
-await megalo.listen({ port: 9000, hostname: '127.0.0.1' });
+await megalo.serve({ port: 9000, hostname: '127.0.0.1' });

@@ -3,6 +3,7 @@ Deno HTTP server framework aiming for maximum speed
 
 ## Example
 ```ts
+// server.ts
 import { Megalo, Controller } from 'https://deno.land/x/megalo/mod.ts';
 
 const megalo = new Megalo({
@@ -89,4 +90,4 @@ megalo.listen({ port: 9000, hostname: '127.0.0.1' });
 
 ## Notes
 
-Until https://github.com/denoland/deno/issues/15813 is resolved, in all POST, PUT, and PATCH routes you MUST await the body or else deno will panic. Also, do not use this in production as any POST, PUT, or PATCH request will crash the server, until this bug is fixed.
+If using serve / flash instead of listen, until https://github.com/denoland/deno/issues/15813 is resolved, in all POST, PUT, and PATCH routes you MUST await the body or else deno will panic. Also, do not use this in production as any POST, PUT, or PATCH request will crash the server, until this bug is fixed.
