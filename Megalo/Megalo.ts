@@ -44,6 +44,7 @@ export class Megalo extends RouteOwner<MegaloHooks> {
 				'Run with --unstable to use `Deno.serve` or use Megalo.listen instead.'
 			);
 
+		this.preParseHandlers ??= (this.hooks.get('preParse') ?? []) as MegaloHooks['preParse'][];
 		return Deno.serve(opts, async (req) => {
 			try {
 				for (let i = 0; i < this.preParseHandlers.length; i += 1) {
@@ -75,6 +76,7 @@ export class Megalo extends RouteOwner<MegaloHooks> {
 				'Run with --unstable to use `Deno.serve` or use Megalo.listen instead.'
 			);
 
+		this.preParseHandlers ??= (this.hooks.get('preParse') ?? []) as MegaloHooks['preParse'][];
 		return Deno.serve(opts, async (req) => {
 			try {
 				for (let i = 0; i < this.preParseHandlers.length; i += 1) {

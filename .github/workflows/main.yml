@@ -1,0 +1,33 @@
+name: main
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  bench:
+    name: Bench
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Deno
+        uses: denoland/setup-deno@v1
+      - name: Install Oha
+        uses: actions-rs/install@v0.1
+        with:
+          crate: oha
+          version: 0.5.4
+      - name: Run Benchmark
+        run: |
+          'deno task bench http://127.0.0.1:9000/'
+          'deno task bench:serve http://127.0.0.1:9000/'
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs:
+      - hello_bench
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Deno
+        uses: denoland/setup-deno@v1
+      - run: deno test -A --unstable
