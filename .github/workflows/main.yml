@@ -24,8 +24,6 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
-    needs:
-      - hello_bench
     steps:
       - uses: actions/checkout@v3
       - name: Install Deno
