@@ -22,7 +22,7 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 	protected patternRoutes: Map<string, Route> = new Map();
 	protected hooks: Map<keyof Hooks, Hooks[keyof Hooks][]> = new Map();
 
-	constructor(config: RouteOwnerConfig<Hooks>) {
+	constructor(config: RouteOwnerConfig) {
 		this.notFoundHandler = config.notFoundHandler;
 		this.errorHandler = config.errorHandler;
 		// default to true

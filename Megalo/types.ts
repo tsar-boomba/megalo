@@ -1,15 +1,15 @@
 import { HttpError } from './HttpError.ts';
 import { Plugin } from "./plugins/types.ts";
 
-export type RouteOwnerConfig<Hooks extends DefaultHooks = DefaultHooks> = {
+export type RouteOwnerConfig = {
 	errorHandler?: ErrorHandler;
 	notFoundHandler?: Handler;
-	plugins?: Plugin<Hooks>[];
+	plugins?: Plugin[];
 	/** Whether or not to parse query string into object, defaults to true */
 	parseQuery?: boolean;
 };
 
-export type MegaloConfig = {} & RouteOwnerConfig<MegaloHooks>;
+export type MegaloConfig = {} & RouteOwnerConfig;
 
 export type RouteConfig = {
 	metadata?: Record<string, any>;
