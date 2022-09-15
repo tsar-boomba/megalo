@@ -98,24 +98,34 @@ export class Megalo extends RouteOwner<MegaloHooks> {
 		const httpConn = Deno.serveHttp(conn);
 
 		requests: for await (const requestEvent of httpConn) {
-			try {
-				for (let i = 0; i < this.preParseHandlers.length; i += 1) {
-					const handler = this.preParseHandlers[i];
+			const respondWith = (res: Response | Promise<Response>) => {
+				requestEvent.respondWith(res).catch(() => {
+					try {
+						conn.close();
+					} catch {
+						// no op
+					}
+				});
+			};
+
+			for (let i = 0; i < this.preParseHandlers.length; i += 1) {
+				const handler = this.preParseHandlers[i];
+				try {
 					const result = await handler(requestEvent.request);
 					if (result?.constructor === Response) {
-						await requestEvent.respondWith(result);
+						respondWith(result);
 						break requests;
 					}
+				} catch (err) {
+					await requestEvent.respondWith(
+						this.handleErr(err, createMegaloRequest(requestEvent.request))
+					);
 				}
-
-				await requestEvent.respondWith(
-					super.handle(createMegaloRequest(requestEvent.request))
-				);
-			} catch (err) {
-				await requestEvent.respondWith(
-					this.handleErr(err, createMegaloRequest(requestEvent.request))
-				);
 			}
+
+			const res = super.handle(createMegaloRequest(requestEvent.request));
+
+			respondWith(res);
 		}
 	}
 }
