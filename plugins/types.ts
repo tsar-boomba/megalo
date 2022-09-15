@@ -1,5 +1,5 @@
-import { RouteOwner } from '../RouteOwner.ts';
-import { DefaultHooks } from '../types.ts';
+import { RouteOwner } from '../src/RouteOwner.ts';
+import { DefaultHooks } from '../src/types.ts';
 
 export type Plugin = <Hooks extends DefaultHooks>(
 	owner: RouteOwner<Hooks>

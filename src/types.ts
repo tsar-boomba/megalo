@@ -1,5 +1,5 @@
 import { HttpError } from './HttpError.ts';
-import { Plugin } from "./plugins/types.ts";
+import { Plugin } from "../plugins/types.ts";
 
 export type RouteOwnerConfig = {
 	errorHandler?: ErrorHandler;

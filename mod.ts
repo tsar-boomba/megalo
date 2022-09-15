@@ -1,4 +1,4 @@
-export { Megalo } from './Megalo/Megalo.ts';
-export { Controller } from './Megalo/Controller.ts';
-export * from './Megalo/HttpError.ts';
-export * from './Megalo/types.ts';
+export { Megalo } from './src/Megalo.ts';
+export { Controller } from './src/Controller.ts';
+export * from './src/HttpError.ts';
+export * from './src/types.ts';

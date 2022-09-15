@@ -1,4 +1,4 @@
-import { cors } from './Megalo/plugins/cors.ts';
+import { cors } from './plugins/cors.ts';
 import { Megalo, Controller } from './mod.ts';
 import { parse } from 'https://deno.land/std@0.155.0/flags/mod.ts';
 
