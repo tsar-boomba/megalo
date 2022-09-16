@@ -1,6 +1,6 @@
 import { MegaloResponse } from "./MegaloResponse.ts";
 import { RouteOwner } from './RouteOwner.ts';
-import { MegaloRequest, RouteOwnerConfig } from './types.ts';
+import { DefaultHooks, MegaloRequest, RouteOwnerConfig } from './types.ts';
 
 /**
  * Group related handlers together with shared middleware
@@ -11,7 +11,7 @@ export class Controller extends RouteOwner {
 	/**
 	 * @param path Base path for routes under this controller
 	 */
-	constructor(path: string, config: RouteOwnerConfig = {}) {
+	constructor(path: string, config: RouteOwnerConfig<DefaultHooks> = {}) {
 		super(config);
 		path.endsWith('/') ? path : (path += '/');
 		this.path = path;
