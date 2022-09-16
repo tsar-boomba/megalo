@@ -16,9 +16,9 @@ export class MegaloResponse {
 	 */
 	body(body?: BodyInit, init?: ResponseInit) {
 		this.#body = body;
-		this.resStatus = init?.status;
-		this.statusText = init?.statusText;
-		if (init?.headers) this.headers = new MegaloHeaders(init.headers);
+		if (init?.status !== undefined) this.resStatus = init.status;
+		if (init?.statusText !== undefined) this.statusText = init?.statusText;
+		if (init?.headers !== undefined) this.headers = new MegaloHeaders(init.headers);
 	}
 
 	/**

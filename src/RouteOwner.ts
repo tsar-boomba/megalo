@@ -340,7 +340,7 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 			return this.runHandler(req, res, wildCard);
 		}
 
-		this.notFoundHandler?.(req, res) ?? res.status(404).body(undefined);
+		this.notFoundHandler? this.notFoundHandler(req, res) :  res.status(404).body(undefined);
 	}
 
 	/**
