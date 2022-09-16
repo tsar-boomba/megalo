@@ -11,6 +11,7 @@ import {
 	RouteOwnerConfig,
 } from './types.ts';
 import { HttpError } from './HttpError.ts';
+import { MegaloResponse } from './MegaloResponse.ts';
 
 export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 	protected parseQuery: boolean;
@@ -22,7 +23,7 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 	protected patternRoutes: Map<string, Route> = new Map();
 	protected hooks: Map<keyof Hooks, Hooks[keyof Hooks][]> = new Map();
 
-	constructor(config: RouteOwnerConfig) {
+	constructor(config: RouteOwnerConfig<Hooks>) {
 		this.notFoundHandler = config.notFoundHandler;
 		this.errorHandler = config.errorHandler;
 		// default to true
@@ -37,6 +38,7 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 	 * respond early/overwrite response.
 	 *
 	 * preParse (root only): Runs right when request is received, before anything is done to it.
+	 * preSend (root only): Runs right before response is sent.
 	 *
 	 * preRoute: Runs after request is parsed for pathname and rawQuery and
 	 * before routes are searched for matching handler. Useful
@@ -262,21 +264,25 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 		this.firstReq = false;
 	}
 
-	async handle(req: MegaloRequest, pathname = req.pathname): Promise<Response> {
+	async handle(
+		req: MegaloRequest,
+		res: MegaloResponse,
+		pathname = req.pathname
+	): Promise<void> {
 		const method = req.method.toUpperCase() as Methods;
 
 		// changes pattern & regex route map to array and get hooks
-		this.firstReq && this.initHandling();
+		if (this.firstReq) this.initHandling();
 
 		// run preRoute hooks
 		for (let i = 0; i < this.preRouteHandlers.length; i += 1) {
 			const handler = this.preRouteHandlers[i];
-			const result = handler(req);
+			const result = handler(req, res);
 			if (result?.constructor === Promise) {
 				const awaitedResult = await result;
-				if (awaitedResult?.constructor === Response) return awaitedResult;
+				if (awaitedResult) return;
 			} else {
-				if (result?.constructor === Response) return result;
+				if (result) return;
 			}
 		}
 
@@ -284,28 +290,28 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 		const route = this.stringRoutes.get(pathname);
 		// route must have handler that matches req method or an ANY handler to match
 		if (route && (route.handlers.get(method) || route.handlers.get('ANY'))) {
-			return this.runHandler(req, route);
+			return this.runHandler(req, res, route);
 		}
 
 		// check controllers
 		for (let i = 0; i < this.controllerArr.length; i += 1) {
 			const controller = this.controllerArr[i];
 			if (pathname.startsWith(controller.path)) {
-				const controllerRes = await controller.handle(req);
+				await controller.handle(req, res, pathname);
 
 				// run postHandle hooks
 				for (let i = 0; i < this.postHandleHandlers.length; i += 1) {
 					const handler = this.postHandleHandlers[i];
-					const result = handler(req, controllerRes);
+					const result = handler(req, res);
 					if (result?.constructor === Promise) {
 						const awaitedResult = await result;
-						if (awaitedResult?.constructor === Response) return awaitedResult;
+						if (awaitedResult) return;
 					} else {
-						if (result?.constructor === Response) return result;
+						if (result) return;
 					}
 				}
 
-				return controllerRes;
+				return;
 			}
 		}
 
@@ -315,7 +321,7 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 			const patternResult = (route.path as PathnamePattern).exec(pathname);
 			if (patternResult && (route.handlers.get(method) || route.handlers.get('ANY'))) {
 				req.params = patternResult;
-				return this.runHandler(req, route);
+				return this.runHandler(req, res, route);
 			}
 		}
 
@@ -326,62 +332,68 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 				(route.path as RegExp).test(pathname) &&
 				(route.handlers.get(method) || route.handlers.get('ANY'))
 			)
-				return this.runHandler(req, route);
+				return this.runHandler(req, res, route);
 		}
 
 		const wildCard = this.stringRoutes.get('*');
 		if (wildCard && (wildCard.handlers.get(method) || wildCard.handlers.get('ANY'))) {
-			return this.runHandler(req, wildCard);
+			return this.runHandler(req, res, wildCard);
 		}
 
-		return this.notFoundHandler?.(req) ?? new Response(undefined, { status: 404 });
+		this.notFoundHandler?.(req, res) ?? res.status(404).body(undefined);
 	}
 
 	/**
 	 * Handles running hooks & handler and handling error
 	 */
-	protected async runHandler(req: MegaloRequest, route: Route): Promise<Response> {
+	protected async runHandler(
+		req: MegaloRequest,
+		res: MegaloResponse,
+		route: Route
+	): Promise<void> {
 		try {
 			// run preHandleHooks
 			for (let i = 0; i < this.preHandleHandlers.length; i += 1) {
 				const handler = this.preHandleHandlers[i];
-				const result = handler(req, route.metadata);
+				const result = handler(req, res, route.metadata);
 				if (result?.constructor === Promise) {
 					const awaitedResult = await result;
-					if (awaitedResult?.constructor === Response) return awaitedResult;
+					if (awaitedResult) return;
 				} else {
-					if (result?.constructor === Response) return result;
+					if (result) return;
 				}
 			}
 
-			const handlerRes = await route.handle(req);
+			await route.handle(req, res);
 
 			// run postHandle hooks
 			for (let i = 0; i < this.postHandleHandlers.length; i += 1) {
 				const handler = this.postHandleHandlers[i];
-				const result = handler(req, handlerRes, route.metadata);
+				const result = handler(req, res, route.metadata);
 				if (result?.constructor === Promise) {
 					const awaitedResult = await result;
-					if (awaitedResult?.constructor === Response) return awaitedResult;
+					if (awaitedResult) return;
 				} else {
-					if (result?.constructor === Response) return result;
+					if (result) return;
 				}
 			}
 
-			return handlerRes;
+			return;
 		} catch (err: unknown) {
-			return this.handleErr(err, req);
+			return this.handleErr(err, req, res);
 		}
 	}
 
-	protected handleErr(err: unknown, req: MegaloRequest): Response | Promise<Response> {
+	protected handleErr(err: unknown, req: MegaloRequest, res: MegaloResponse): void | Promise<void> {
 		let httpErr: HttpError | undefined;
 		if (err instanceof HttpError) httpErr = err;
-		if (this.errorHandler) return this.errorHandler(err, req, httpErr);
+		if (this.errorHandler) return this.errorHandler(err, req, res, httpErr);
 		console.error(err);
 
-		return httpErr
-			? httpErr.toResponse()
-			: new Response('An internal server error ocurred.', { status: 500 });
+		if (httpErr) {
+			res.status(httpErr.status).body(httpErr.message);
+		} else {
+			res.status(500).body('An internal server error ocurred.');
+		}
 	}
 }

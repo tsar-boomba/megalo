@@ -1,6 +1,7 @@
 import { MegaloConfig, MegaloHooks } from './types.ts';
 import { RouteOwner } from './RouteOwner.ts';
 import { createMegaloRequest } from './utils.ts';
+import { MegaloResponse } from './MegaloResponse.ts';
 
 export class Megalo extends RouteOwner<MegaloHooks> {
 	private config: MegaloConfig;
@@ -11,8 +12,11 @@ export class Megalo extends RouteOwner<MegaloHooks> {
 	}
 
 	preParseHandlers!: MegaloHooks['preParse'][];
+	preSendHandlers!: MegaloHooks['preSend'][];
 	async listen(opts: Deno.ListenOptions) {
 		this.preParseHandlers ??= (this.hooks.get('preParse') ?? []) as MegaloHooks['preParse'][];
+		this.preSendHandlers ??= (this.hooks.get('preSend') ?? []) as MegaloHooks['preSend'][];
+
 		const server = Deno.listen(opts);
 
 		console.log(`Server started on http://${opts.hostname || '0.0.0.0'}:${opts.port}/`);
@@ -23,6 +27,8 @@ export class Megalo extends RouteOwner<MegaloHooks> {
 
 	async listenTls(opts: Deno.ListenTlsOptions) {
 		this.preParseHandlers ??= (this.hooks.get('preParse') ?? []) as MegaloHooks['preParse'][];
+		this.preSendHandlers ??= (this.hooks.get('preSend') ?? []) as MegaloHooks['preSend'][];
+
 		const server = Deno.listenTls(opts);
 
 		for await (const conn of server) {
@@ -45,19 +51,36 @@ export class Megalo extends RouteOwner<MegaloHooks> {
 			);
 
 		this.preParseHandlers ??= (this.hooks.get('preParse') ?? []) as MegaloHooks['preParse'][];
+		this.preSendHandlers ??= (this.hooks.get('preSend') ?? []) as MegaloHooks['preSend'][];
 		return Deno.serve(opts, async (req) => {
+			const res = new MegaloResponse();
 			try {
 				for (let i = 0; i < this.preParseHandlers.length; i += 1) {
 					const handler = this.preParseHandlers[i];
-					const result = await handler(req);
-					if (result?.constructor === Response) {
-						return result;
+					const result = handler(req, res);
+					if (result?.constructor === MegaloResponse) {
+						return result.toResponse();
 					}
 				}
 
-				return super.handle(createMegaloRequest(req));
+				const megaloReq = createMegaloRequest(req);
+				await super.handle(megaloReq, res);
+
+				for (let i = 0; i < this.preSendHandlers.length; i += 1) {
+					const handler = this.preSendHandlers[i];
+					const result = handler(megaloReq, res);
+					if (result?.constructor === Promise) {
+						const awaitedResult = await result;
+						if (awaitedResult) return res.toResponse();
+					} else {
+						if (result) return res.toResponse();
+					}
+				}
+
+				return res.toResponse();
 			} catch (err) {
-				return this.handleErr(err, createMegaloRequest(req));
+				this.handleErr(err, createMegaloRequest(req), res);
+				return res.toResponse();
 			}
 		});
 	}
@@ -77,19 +100,36 @@ export class Megalo extends RouteOwner<MegaloHooks> {
 			);
 
 		this.preParseHandlers ??= (this.hooks.get('preParse') ?? []) as MegaloHooks['preParse'][];
+		this.preSendHandlers ??= (this.hooks.get('preSend') ?? []) as MegaloHooks['preSend'][];
 		return Deno.serve(opts, async (req) => {
+			const res = new MegaloResponse();
 			try {
 				for (let i = 0; i < this.preParseHandlers.length; i += 1) {
 					const handler = this.preParseHandlers[i];
-					const result = await handler(req);
-					if (result?.constructor === Response) {
-						return result;
+					const result = handler(req, res);
+					if (result?.constructor === MegaloResponse) {
+						return result.toResponse();
 					}
 				}
 
-				return super.handle(createMegaloRequest(req));
+				const megaloReq = createMegaloRequest(req);
+				await super.handle(megaloReq, res);
+
+				for (let i = 0; i < this.preSendHandlers.length; i += 1) {
+					const handler = this.preSendHandlers[i];
+					const result = handler(megaloReq, res);
+					if (result?.constructor === Promise) {
+						const awaitedResult = await result;
+						if (awaitedResult) return res.toResponse();
+					} else {
+						if (result) return res.toResponse();
+					}
+				}
+
+				return res.toResponse();
 			} catch (err) {
-				return this.handleErr(err, createMegaloRequest(req));
+				this.handleErr(err, createMegaloRequest(req), res);
+				return res.toResponse();
 			}
 		});
 	}
@@ -98,8 +138,9 @@ export class Megalo extends RouteOwner<MegaloHooks> {
 		const httpConn = Deno.serveHttp(conn);
 
 		requests: for await (const requestEvent of httpConn) {
-			const respondWith = (res: Response | Promise<Response>) => {
-				requestEvent.respondWith(res).catch(() => {
+			const res = new MegaloResponse();
+			const respond = () => {
+				requestEvent.respondWith(res.toResponse()).catch(() => {
 					try {
 						conn.close();
 					} catch {
@@ -108,24 +149,41 @@ export class Megalo extends RouteOwner<MegaloHooks> {
 				});
 			};
 
-			for (let i = 0; i < this.preParseHandlers.length; i += 1) {
-				const handler = this.preParseHandlers[i];
-				try {
-					const result = await handler(requestEvent.request);
-					if (result?.constructor === Response) {
-						respondWith(result);
-						break requests;
+			try {
+				for (let i = 0; i < this.preParseHandlers.length; i += 1) {
+					const handler = this.preParseHandlers[i];
+					const result = await handler(requestEvent.request, res);
+					if (result?.constructor === MegaloResponse) {
+						respond();
+						continue requests;
 					}
-				} catch (err) {
-					await requestEvent.respondWith(
-						this.handleErr(err, createMegaloRequest(requestEvent.request))
-					);
 				}
+
+				const megaloReq = createMegaloRequest(requestEvent.request);
+				await super.handle(megaloReq, res);
+
+				for (let i = 0; i < this.preSendHandlers.length; i += 1) {
+					const handler = this.preSendHandlers[i];
+					const result = handler(megaloReq, res);
+					if (result?.constructor === Promise) {
+						const awaitedResult = await result;
+						if (awaitedResult) {
+							respond();
+							continue requests;
+						}
+					} else {
+						if (result) {
+							respond();
+							continue requests;
+						}
+					}
+				}
+
+				respond();
+			} catch (err) {
+				await this.handleErr(err, createMegaloRequest(requestEvent.request), res);
+				respond();
 			}
-
-			const res = super.handle(createMegaloRequest(requestEvent.request));
-
-			respondWith(res);
 		}
 	}
 }

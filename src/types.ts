@@ -1,21 +1,22 @@
 import { HttpError } from './HttpError.ts';
-import { Plugin } from "../plugins/types.ts";
+import { Plugin } from '../plugins/types.ts';
+import { MegaloResponse } from './MegaloResponse.ts';
 
-export type RouteOwnerConfig = {
+export type RouteOwnerConfig<Hooks extends DefaultHooks> = {
 	errorHandler?: ErrorHandler;
 	notFoundHandler?: Handler;
-	plugins?: Plugin[];
+	plugins?: Plugin<Hooks>[];
 	/** Whether or not to parse query string into object, defaults to true */
 	parseQuery?: boolean;
 };
 
-export type MegaloConfig = {} & RouteOwnerConfig;
+export type MegaloConfig = {} & RouteOwnerConfig<MegaloHooks>;
 
 export type RouteConfig = {
 	metadata?: Record<string, any>;
 	/** What HTTP method this route will handle */
 	method: Methods;
-} & Omit<RouteOwnerConfig, 'errorHandler' | 'notFoundHandler' | 'plugins'>;
+} & Omit<RouteOwnerConfig<never>, 'errorHandler' | 'notFoundHandler' | 'plugins'>;
 
 export interface MegaloRequest extends Request {
 	pathname: string;
@@ -24,28 +25,34 @@ export interface MegaloRequest extends Request {
 	params: Record<string, string>;
 }
 
-type HookReturn = Response | void | Promise<Response | void>;
+type HookReturn = MegaloResponse | void | Promise<MegaloResponse | void>;
 
 export type DefaultHooks = {
-	preHandle: (req: MegaloRequest, metadata?: Record<string, string>) => HookReturn;
-	postHandle: (
+	preHandle: (
 		req: MegaloRequest,
-		res: Response,
+		res: MegaloResponse,
 		metadata?: Record<string, string>
 	) => HookReturn;
-	preRoute: (req: MegaloRequest) => HookReturn;
+	postHandle: (
+		req: MegaloRequest,
+		res: MegaloResponse,
+		metadata?: Record<string, string>
+	) => HookReturn;
+	preRoute: (req: MegaloRequest, res: MegaloResponse) => HookReturn;
 };
 
 export type MegaloHooks = {
-	preParse: (req: Request) => HookReturn;
+	preParse: (req: Request, res: MegaloResponse) => HookReturn;
+	preSend: (req: MegaloRequest, res: MegaloResponse) => HookReturn;
 } & DefaultHooks;
 
 export type Methods = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'OPTIONS' | 'ANY';
 
-export type Handler = (req: MegaloRequest) => Promise<Response> | Response;
+export type Handler = (req: MegaloRequest, res: MegaloResponse) => Promise<void> | void;
 
 export type ErrorHandler = (
 	err: unknown,
 	req: MegaloRequest,
+	res: MegaloResponse,
 	httpErr?: HttpError
-) => Promise<Response> | Response;
+) => Promise<void> | void;

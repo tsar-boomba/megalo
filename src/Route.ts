@@ -1,3 +1,4 @@
+import { MegaloResponse } from "./MegaloResponse.ts";
 import { PathnamePattern } from './PathnamePattern.ts';
 import { Handler, MegaloRequest, Methods, RouteConfig } from './types.ts';
 import { parseQuery } from './utils.ts';
@@ -14,10 +15,10 @@ export class Route {
 		this.path = path;
 	}
 
-	handle(req: MegaloRequest): Response | Promise<Response> {
+	handle(req: MegaloRequest, res: MegaloResponse): void | Promise<void> {
 		const handler = (this.handlers.get(req.method.toUpperCase() as Methods) ??
 			this.handlers.get('ANY')) as { handler: Handler; config: RouteConfig };
 		if (req.rawQuery && handler.config.parseQuery) req.query = parseQuery(req.rawQuery);
-		return handler.handler(req);
+		return handler.handler(req, res);
 	}
 }

@@ -1,3 +1,4 @@
+import { MegaloResponse } from "./MegaloResponse.ts";
 import { RouteOwner } from './RouteOwner.ts';
 import { MegaloRequest, RouteOwnerConfig } from './types.ts';
 
@@ -16,9 +17,9 @@ export class Controller extends RouteOwner {
 		this.path = path;
 	}
 
-	handle(req: MegaloRequest, pathname: string = req.pathname): Promise<Response> {
+	handle(req: MegaloRequest, res: MegaloResponse, pathname: string = req.pathname) {
 		const truncatedPathname = pathname.replace(this.path, '/');
 
-		return super.handle(req, truncatedPathname);
+		return super.handle(req, res, truncatedPathname);
 	}
 }

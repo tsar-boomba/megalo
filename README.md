@@ -5,53 +5,53 @@ Deno HTTP server framework aiming for maximum speed
 ```ts
 // server.ts
 import { Megalo, Controller } from 'https://deno.land/x/megalo/mod.ts';
+import { cors } from '[./plugins/cors.ts](https://deno.land/x/megalo/plugins/cors.ts)';
+
 
 const megalo = new Megalo({
-    // optionally add a notFoundHandler
-    notFoundHandler: (req) =>
-        new Response(`<html><body>${req.pathname} not found :(</body></html>`, {
-            status: 404,
-            headers: { ['Content-Type']: 'text/html' },
-        }),
-    // optionally add an errorHandler
-    errorHandler: (err, req, httpErr) => {
-        // if NotFoundError, etc. was thrown
-        if (httpErr) return httpErr.toResponse();
-        return new Response('Internal Server Error', { status: 500 })
-    }
+	// optionally add a notFoundHandler
+	notFoundHandler: (req, res) => res.status(404).body(`${req.pathname} not found :(`),
+	// optionally add an errorHandler
+	errorHandler: (_err, _req, res, httpErr) => {
+		// if NotFoundError, etc. was thrown
+		if (httpErr) return res.status(httpErr.status).body(httpErr.message);
+		res.status(500).body('Internal Server Error');
+	},
+	plugins: [cors({ origin: 'http://127.0.0.1:9000' })],
 });
 
 megalo
-    // route all requests to '/'
-    .addHook('preRoute', (req) => (req.pathname = '/'))
-    .get('/', { parseQuery: false }, () => {
-        return new Response('<html><body>hello megalo!</body></html>', {
-            status: 200,
-            headers: { ['Content-Type']: 'text/html' },
-        });
-    })
-    .post('/', (req) => {
-        return new Response('Secret handler', { status: 200 });
-    })
-    .get('/sus', () => {
-        return new Response('<html><body>sus page</body></html>', {
-            status: 200,
-            headers: { ['Content-Type']: 'text/html' },
-        });
-    })
-    .get(/^\/regex(\/.*)?$/, () => new Response(undefined, { status: 200 }))
-    .get('/pattern/:id', ({ params }) => {
-        return new Response(`<html><body>id: ${params.id}</body></html>`, {
-            status: 200,
-            headers: { ['Content-Type']: 'text/html' },
-        });
-    })
-    .post('/posted', (req) => {
-        return new Response('you posted it :)', { status: 200 });
-    })
-    .controller(new Controller('/users').get('/', () => new Response('user', { status: 200 })));
+	.get('/', { parseQuery: false }, (_req, res) => {
+		res.body('hello megalo!', {
+			status: 200,
+			headers: { ['Content-Type']: 'text/html' },
+		});
+	})
+	.post('/', (_req, res) => {
+		res.body('Secret handler', { status: 200 });
+	})
+	.get('/sus', (_req, res) => {
+		res.body('sus page', {
+			status: 200,
+			headers: { ['Content-Type']: 'text/html' },
+		});
+	})
+	.get(/^\/regex(\/.*)?$/, (_req, res) => res.body(undefined, { status: 200 }))
+	.get('/pattern/:id', ({ params }, res) => {
+		res.body(`id: ${params.id}`, {
+			status: 200,
+			headers: { ['Content-Type']: 'text/html' },
+		});
+	})
+	.post('/posted', (_req, res) => {
+		res.body('you posted it :)', { status: 200 });
+	})
+	.controller(
+		new Controller('/users')
+			.get('/', (_req, res) => res.body('user', { status: 200 }))
+			.get('/:id', (req, res) => res.body(`user id: ${req.params.id}`, { status: 200 }))
+	);
 
-// log startup time
 console.log(`Startup time: ${performance.now()}ms`);
 megalo.listen({ port: 9000, hostname: '127.0.0.1' });
 ```
@@ -72,6 +72,33 @@ Routes are resolved in this order
 - wildcard (You can only have one of these per method) `"*"`
 - notFoundHandler
 
+## Hooks
+
+You can use hooks to run functions when certain lifecycle events occur. Hooks can be used on the Megalo instance or Controller instance.
+
+- preRoute: runs before pathname is evaluated and handler is chosen
+- preHandle: runs directly before handler
+- postHandle: runs directly after handler (may change in the future)
+
+The megalo instance has some exclusive hooks
+
+- preParse: runs before anything is done, right when request is received
+- preSend: run directly before response is sent to client, last chance to add headers or whatever
+
+This is an example on how to use hooks. If you return the res from the hook it will be sent early
+```ts
+import { Megalo, InternalServerError } from 'https://deno.land/x/megalo/mod.ts';
+
+const megalo = new Megalo();
+
+megalo.addHook((req, res) => {}).get((req, res) => {
+    throw new InternalServerError({ message: 'uh oh' });
+    res.status(200);
+});
+
+megalo.listen({ port: 9000, hostname: '127.0.0.1' });
+```
+
 ## Error Throwing
 
 You can throw special exported errors to have the response status and body automatically set.
@@ -82,7 +109,7 @@ const megalo = new Megalo();
 
 megalo.get((req) => {
     throw new InternalServerError({ message: 'uh oh' });
-    return new Response(undefined, { status: 200 });
+    res.status(200);
 });
 
 megalo.listen({ port: 9000, hostname: '127.0.0.1' });

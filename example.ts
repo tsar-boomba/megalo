@@ -4,52 +4,46 @@ import { parse } from 'https://deno.land/std@0.155.0/flags/mod.ts';
 
 const megalo = new Megalo({
 	// optionally add a notFoundHandler
-	notFoundHandler: (req) =>
-		new Response(`${req.pathname} not found :(`, {
-			status: 404,
-			headers: { ['Content-Type']: 'text/html' },
-		}),
+	notFoundHandler: (req, res) => res.status(404).body(`${req.pathname} not found :(`),
 	// optionally add an errorHandler
-	errorHandler: (_err, _req, httpErr) => {
+	errorHandler: (_err, _req, res, httpErr) => {
 		// if NotFoundError, etc. was thrown
-		if (httpErr) return httpErr.toResponse();
-		return new Response('Internal Server Error', { status: 500 });
+		if (httpErr) return res.status(httpErr.status).body(httpErr.message);
+		res.status(500).body('Internal Server Error');
 	},
 	plugins: [cors({ origin: 'http://127.0.0.1:9000' })],
 });
 
 megalo
-	.get('/', { parseQuery: false }, () => {
-		return new Response('hello megalo!', {
+	.get('/', { parseQuery: false }, (_req, res) => {
+		res.body('hello megalo!', {
 			status: 200,
 			headers: { ['Content-Type']: 'text/html' },
 		});
 	})
-	.post('/', () => {
-		return new Response('Secret handler', { status: 200 });
+	.post('/', (_req, res) => {
+		res.body('Secret handler', { status: 200 });
 	})
-	.get('/sus', () => {
-		return new Response('sus page', {
+	.get('/sus', (_req, res) => {
+		res.body('sus page', {
 			status: 200,
 			headers: { ['Content-Type']: 'text/html' },
 		});
 	})
-	.get(/^\/regex(\/.*)?$/, () => new Response(undefined, { status: 200 }))
-	.get('/pattern/:id', ({ params }) => {
-		return new Response(`id: ${params.id}`, {
+	.get(/^\/regex(\/.*)?$/, (_req, res) => res.body(undefined, { status: 200 }))
+	.get('/pattern/:id', ({ params }, res) => {
+		res.body(`id: ${params.id}`, {
 			status: 200,
 			headers: { ['Content-Type']: 'text/html' },
 		});
 	})
-	.get('/ptrn/:id', () => new Response(undefined, { status: 200 }))
-	.get('/pat/:id', () => new Response(undefined, { status: 200 }))
-	.post('/posted', () => {
-		return new Response('you posted it :)', { status: 200 });
+	.post('/posted', (_req, res) => {
+		res.body('you posted it :)', { status: 200 });
 	})
 	.controller(
 		new Controller('/users')
-			.get('/', () => new Response('user', { status: 200 }))
-			.get('/:id', (req) => new Response(`user id: ${req.params.id}`, { status: 200 }))
+			.get('/', (_req, res) => res.body('user', { status: 200 }))
+			.get('/:id', (req, res) => res.body(`user id: ${req.params.id}`, { status: 200 }))
 	);
 
 console.log(`Startup time: ${performance.now()}ms`);

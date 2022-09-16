@@ -1,3 +1,4 @@
+import { MegaloHooks } from '../src/types.ts';
 import { Plugin } from './types.ts';
 
 export type CorsPluginOptions = {
@@ -62,23 +63,23 @@ export const cors = ({
 	maxAge,
 	methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD'],
 	optionsSuccessStatus = 204,
-}: CorsPluginOptions): Plugin => {
+}: CorsPluginOptions): Plugin<MegaloHooks> => {
 	methods = methods.map((m) => m.toUpperCase());
 	const allowedIsString = typeof allowedOrigin === 'string';
 	const allowedIsArray = Array.isArray(allowedOrigin);
 
 	const headersString = headers.join(',');
 	const methodsString = methods.join(',');
-	const resHeaders: Record<string, string> = {
+	const optionsHeaders: Record<string, string> = {
 		['Access-Control-Allow-Methods']: methodsString,
 		['Access-Control-Allow-Headers']: headersString,
 		['Access-Control-Allow-Credentials']: credentials.toString(),
 	};
 
-	exposeHeaders && (resHeaders['Access-Control-Expose-Headers'] = exposeHeaders?.join(','));
-	maxAge !== undefined && (resHeaders['Access-Control-Max-Age'] = maxAge.toFixed(0));
-	allowedIsString && (resHeaders['Access-Control-Allow-Origin'] = allowedOrigin);
-	!allowedIsString && (resHeaders['Vary'] = 'Origin');
+	exposeHeaders && (optionsHeaders['Access-Control-Expose-Headers'] = exposeHeaders?.join(','));
+	maxAge !== undefined && (optionsHeaders['Access-Control-Max-Age'] = maxAge.toFixed(0));
+	allowedIsString && (optionsHeaders['Access-Control-Allow-Origin'] = allowedOrigin);
+	!allowedIsString && (optionsHeaders['Vary'] = 'Origin');
 
 	const originMatches = (origin: string): boolean => {
 		if (allowedIsArray) {
@@ -89,31 +90,32 @@ export const cors = ({
 			return (allowedOrigin as RegExp).test(origin);
 		}
 	};
-	console.log(allowedOrigin);
 
 	return (owner) => {
-		owner.options('*', (req) => {
-			const origin = req.headers.get('Origin') ?? '';
+		owner.options('*', (req, res) => {
 			// set only if allowed is dynamic
-			!allowedIsString &&
-				(resHeaders['Access-Control-Allow-Origin'] = originMatches(origin)
+			if (!allowedIsString) {
+				const origin = req.headers.get('Origin') ?? '';
+				optionsHeaders['Access-Control-Allow-Origin'] = originMatches(origin)
 					? origin
-					: 'false');
-			return new Response(undefined, {
-				status: optionsSuccessStatus,
-				headers: resHeaders,
-			});
+					: 'false';
+			}
+
+			res.status(optionsSuccessStatus).body(undefined, { headers: optionsHeaders });
 		});
-		owner.addHook('postHandle', (req, res) => {
-			const origin = req.headers.get('Origin') ?? '';
-			credentials !== undefined &&
-				res.headers.set('Access-Control-Allow-Credentials', credentials.toString());
-			!allowedIsString &&
+		const credentialsString = credentials.toString();
+		owner.addHook('preSend', (req, res) => {
+			//const start = performance.now();
+			res.headers.set('Access-Control-Allow-Credentials', credentialsString);
+			if (!allowedIsString) {
+				const origin = req.headers.get('Origin') ?? '';
 				res.headers.set(
 					'Access-Control-Allow-Origin',
 					originMatches(origin) ? origin : 'false'
 				);
-			!allowedIsString && res.headers.append('Vary', 'Origin');
+				res.headers.append('Vary', 'Origin');
+			}
+			//console.log(performance.now() - start);
 		});
 	};
 };
