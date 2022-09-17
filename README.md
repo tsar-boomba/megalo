@@ -7,7 +7,7 @@ Deno HTTP server framework aiming for maximum speed
 ```ts
 // server.ts
 import { Controller, Megalo } from 'https://deno.land/x/megalo/mod.ts';
-import { cors } from '[./plugins/cors.ts](https://deno.land/x/megalo/plugins/cors.ts)';
+import { cors } from 'https://deno.land/x/megalo/plugins/cors.ts';
 
 const megalo = new Megalo({
 	// optionally add a notFoundHandler
@@ -96,17 +96,22 @@ The megalo instance has some exclusive hooks
   headers or whatever
 
 This is an example on how to use hooks. If you return the res from the hook it
-will be sent early
+will be sent early.
 
 ```ts
-import { InternalServerError, Megalo } from 'https://deno.land/x/megalo/mod.ts';
+import { ForbiddenError, Megalo } from 'https://deno.land/x/megalo/mod.ts';
 
 const megalo = new Megalo();
 
-megalo.addHook((req, res) => {}).get((req, res) => {
-	throw new InternalServerError({ message: 'uh oh' });
-	res.status(200);
-});
+megalo
+	.addHook('preRoute', (req, res) => {
+		// note that all pathname will never have trailing slash, even if url does
+		if (req.pathname === '/return-early') return res;
+		if (req.pathname === '/forbidden') throw new ForbiddenError('not okay >:(');
+	})
+	.get((req, res) => {
+		res.status(200);
+	});
 
 megalo.listen({ port: 9000, hostname: '127.0.0.1' });
 ```

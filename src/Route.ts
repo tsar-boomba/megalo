@@ -10,7 +10,7 @@ export class Route {
 
 	constructor(path: string | RegExp | PathnamePattern) {
 		// always use trailing slash
-		if (typeof path === 'string') path.endsWith('/') ? null : (path += '/');
+		if (typeof path === 'string') path.endsWith('/') && path.length > 1 ? (path = path.slice(0, -1)) : path;
 
 		this.path = path;
 	}

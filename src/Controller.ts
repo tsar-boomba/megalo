@@ -13,7 +13,7 @@ export class Controller extends RouteOwner {
 	 */
 	constructor(path: string, config: RouteOwnerConfig<DefaultHooks> = {}) {
 		super(config);
-		path.endsWith('/') ? path : (path += '/');
+		path.endsWith('/') && path.length > 1 ? (path = path.slice(0, -1)) : path;
 		this.path = path;
 	}
 
@@ -22,7 +22,8 @@ export class Controller extends RouteOwner {
 		res: MegaloResponse,
 		pathname: string = req.pathname,
 	) {
-		const truncatedPathname = pathname.replace(this.path, '/');
+		let truncatedPathname = pathname.replace(this.path, '');
+		if (truncatedPathname.length === 0) truncatedPathname += '/';
 
 		return super.handle(req, res, truncatedPathname);
 	}

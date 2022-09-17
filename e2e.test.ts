@@ -45,7 +45,7 @@ Deno.test('end-2-end', async () => {
 
 		res = await fetch(serverUrl + '/does-not-exist');
 		result = await res.text();
-		assertEquals(result, '/does-not-exist/ not found :(');
+		assertEquals(result, '/does-not-exist not found :(');
 		assertEquals(res.status, 404);
 	} catch (err) {
 		serverProc.close();
