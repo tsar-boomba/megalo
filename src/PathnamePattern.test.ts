@@ -13,8 +13,14 @@ Deno.test('Single Parameter', () => {
 Deno.test('Multi Parameter', () => {
 	const pattern = new PathnamePattern('/users/:id/posts/:title');
 
-	assertEquals(pattern.exec('/users/123/posts/deno'), { id: '123', title: 'deno' });
-	assertEquals(pattern.exec('/users/123/posts/node-js'), { id: '123', title: 'node-js' });
+	assertEquals(pattern.exec('/users/123/posts/deno'), {
+		id: '123',
+		title: 'deno',
+	});
+	assertEquals(pattern.exec('/users/123/posts/node-js'), {
+		id: '123',
+		title: 'node-js',
+	});
 	assertEquals(pattern.exec('/users/123/posts'), undefined);
 	assertEquals(pattern.exec('/users'), undefined);
 });

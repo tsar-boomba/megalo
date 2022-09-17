@@ -14,21 +14,23 @@ export class PathnamePattern {
 		const pathPortions = pattern.split('/');
 
 		this.re = new RegExp(
-			`^${pathPortions
-				.map((portion) => {
-					if (!portion.startsWith(':')) {
-						return portion + '/';
-					} else {
-						return `(?<${portion.slice(1)}>${urlSafeClass}+)/`;
-					}
-				})
-				.join('')}?$`
+			`^${
+				pathPortions
+					.map((portion) => {
+						if (!portion.startsWith(':')) {
+							return portion + '/';
+						} else {
+							return `(?<${portion.slice(1)}>${urlSafeClass}+)/`;
+						}
+					})
+					.join('')
+			}?$`,
 		);
 	}
 
 	/**
 	 * Checks if pathname matches pattern and parses params
-	 * 
+	 *
 	 * ```
 	 * const pattern = new PathnamePattern('/users/:id/:name');
 	 * const params = patten.exec('/users/23/isaiah');
@@ -43,7 +45,7 @@ export class PathnamePattern {
 
 	/**
 	 * Checks if pathname matches pattern, does not parse params
-	 * 
+	 *
 	 * ```
 	 * const pattern = new PathnamePattern('/users/:id/:name');
 	 * const params = patten.exec('/users/23/isaiah');

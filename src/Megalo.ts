@@ -14,20 +14,26 @@ export class Megalo extends RouteOwner<MegaloHooks> {
 	preParseHandlers!: MegaloHooks['preParse'][];
 	preSendHandlers!: MegaloHooks['preSend'][];
 	async listen(opts: Deno.ListenOptions) {
-		this.preParseHandlers ??= (this.hooks.get('preParse') ?? []) as MegaloHooks['preParse'][];
-		this.preSendHandlers ??= (this.hooks.get('preSend') ?? []) as MegaloHooks['preSend'][];
+		this.preParseHandlers ??=
+			(this.hooks.get('preParse') ?? []) as MegaloHooks['preParse'][];
+		this.preSendHandlers ??=
+			(this.hooks.get('preSend') ?? []) as MegaloHooks['preSend'][];
 
 		const server = Deno.listen(opts);
 
-		console.log(`Server started on http://${opts.hostname || '0.0.0.0'}:${opts.port}/`);
+		console.log(
+			`Server started on http://${opts.hostname || '0.0.0.0'}:${opts.port}/`,
+		);
 		for await (const conn of server) {
 			this.serveHttp(conn).catch((err) => console.error(err));
 		}
 	}
 
 	async listenTls(opts: Deno.ListenTlsOptions) {
-		this.preParseHandlers ??= (this.hooks.get('preParse') ?? []) as MegaloHooks['preParse'][];
-		this.preSendHandlers ??= (this.hooks.get('preSend') ?? []) as MegaloHooks['preSend'][];
+		this.preParseHandlers ??=
+			(this.hooks.get('preParse') ?? []) as MegaloHooks['preParse'][];
+		this.preSendHandlers ??=
+			(this.hooks.get('preSend') ?? []) as MegaloHooks['preSend'][];
 
 		const server = Deno.listenTls(opts);
 
@@ -45,13 +51,16 @@ export class Megalo extends RouteOwner<MegaloHooks> {
 	 * @param opts Deno.serve options
 	 */
 	serve(opts: Deno.ServeOptions) {
-		if (!Deno.serve)
+		if (!Deno.serve) {
 			throw new Error(
-				'Run with --unstable to use `Deno.serve` or use Megalo.listen instead.'
+				'Run with --unstable to use `Deno.serve` or use Megalo.listen instead.',
 			);
+		}
 
-		this.preParseHandlers ??= (this.hooks.get('preParse') ?? []) as MegaloHooks['preParse'][];
-		this.preSendHandlers ??= (this.hooks.get('preSend') ?? []) as MegaloHooks['preSend'][];
+		this.preParseHandlers ??=
+			(this.hooks.get('preParse') ?? []) as MegaloHooks['preParse'][];
+		this.preSendHandlers ??=
+			(this.hooks.get('preSend') ?? []) as MegaloHooks['preSend'][];
 		return Deno.serve(opts, async (req) => {
 			const res = new MegaloResponse();
 			try {
@@ -94,13 +103,16 @@ export class Megalo extends RouteOwner<MegaloHooks> {
 	 * @param opts Deno.serve options
 	 */
 	serveTls(opts: Deno.ServeTlsOptions) {
-		if (!Deno.serve)
+		if (!Deno.serve) {
 			throw new Error(
-				'Run with --unstable to use `Deno.serve` or use Megalo.listen instead.'
+				'Run with --unstable to use `Deno.serve` or use Megalo.listen instead.',
 			);
+		}
 
-		this.preParseHandlers ??= (this.hooks.get('preParse') ?? []) as MegaloHooks['preParse'][];
-		this.preSendHandlers ??= (this.hooks.get('preSend') ?? []) as MegaloHooks['preSend'][];
+		this.preParseHandlers ??=
+			(this.hooks.get('preParse') ?? []) as MegaloHooks['preParse'][];
+		this.preSendHandlers ??=
+			(this.hooks.get('preSend') ?? []) as MegaloHooks['preSend'][];
 		return Deno.serve(opts, async (req) => {
 			const res = new MegaloResponse();
 			try {
@@ -137,7 +149,8 @@ export class Megalo extends RouteOwner<MegaloHooks> {
 	async serveHttp(conn: Deno.Conn): Promise<void> {
 		const httpConn = Deno.serveHttp(conn);
 
-		requests: for await (const requestEvent of httpConn) {
+		requests:
+		for await (const requestEvent of httpConn) {
 			const res = new MegaloResponse();
 			const respond = () => {
 				requestEvent.respondWith(res.toResponse()).catch(() => {
@@ -181,7 +194,11 @@ export class Megalo extends RouteOwner<MegaloHooks> {
 
 				respond();
 			} catch (err) {
-				await this.handleErr(err, createMegaloRequest(requestEvent.request), res);
+				await this.handleErr(
+					err,
+					createMegaloRequest(requestEvent.request),
+					res,
+				);
 				respond();
 			}
 		}

@@ -12,11 +12,16 @@ export type RouteOwnerConfig<Hooks extends DefaultHooks> = {
 
 export type MegaloConfig = {} & RouteOwnerConfig<MegaloHooks>;
 
-export type RouteConfig = {
-	metadata?: Record<string, any>;
-	/** What HTTP method this route will handle */
-	method: Methods;
-} & Omit<RouteOwnerConfig<never>, 'errorHandler' | 'notFoundHandler' | 'plugins'>;
+export type RouteConfig =
+	& {
+		metadata?: Record<string, any>;
+		/** What HTTP method this route will handle */
+		method: Methods;
+	}
+	& Omit<
+		RouteOwnerConfig<never>,
+		'errorHandler' | 'notFoundHandler' | 'plugins'
+	>;
 
 export interface MegaloRequest extends Request {
 	pathname: string;
@@ -31,12 +36,12 @@ export type DefaultHooks = {
 	preHandle: (
 		req: MegaloRequest,
 		res: MegaloResponse,
-		metadata?: Record<string, string>
+		metadata?: Record<string, string>,
 	) => HookReturn;
 	postHandle: (
 		req: MegaloRequest,
 		res: MegaloResponse,
-		metadata?: Record<string, string>
+		metadata?: Record<string, string>,
 	) => HookReturn;
 	preRoute: (req: MegaloRequest, res: MegaloResponse) => HookReturn;
 };
@@ -46,13 +51,23 @@ export type MegaloHooks = {
 	preSend: (req: MegaloRequest, res: MegaloResponse) => HookReturn;
 } & DefaultHooks;
 
-export type Methods = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'OPTIONS' | 'ANY';
+export type Methods =
+	| 'GET'
+	| 'POST'
+	| 'PUT'
+	| 'PATCH'
+	| 'DELETE'
+	| 'OPTIONS'
+	| 'ANY';
 
-export type Handler = (req: MegaloRequest, res: MegaloResponse) => Promise<void> | void;
+export type Handler = (
+	req: MegaloRequest,
+	res: MegaloResponse,
+) => Promise<void> | void;
 
 export type ErrorHandler = (
 	err: unknown,
 	req: MegaloRequest,
 	res: MegaloResponse,
-	httpErr?: HttpError
+	httpErr?: HttpError,
 ) => Promise<void> | void;

@@ -10,13 +10,17 @@ Deno.test('end-2-end', async () => {
 
 	try {
 		let res = await fetch(serverUrl + '/');
-		let result = await res.text();
+		let result: any = await res.text();
 		assertEquals(result, 'hello megalo!');
 		assertEquals(res.headers.get('Content-Type'), 'text/html');
 
 		res = await fetch(serverUrl + '/', { method: 'POST', mode: 'cors' });
 		result = await res.text();
 		assertEquals(result, 'Secret handler');
+
+		res = await fetch(serverUrl + '/json');
+		result = await res.json();
+		assertEquals(result, { json: true });
 
 		res = await fetch(serverUrl + '/sus');
 		result = await res.text();

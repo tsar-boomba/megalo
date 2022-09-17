@@ -1,10 +1,11 @@
 import { cors } from './plugins/cors.ts';
-import { Megalo, Controller } from './mod.ts';
+import { Controller, Megalo } from './mod.ts';
 import { parse } from 'https://deno.land/std@0.155.0/flags/mod.ts';
 
 const megalo = new Megalo({
 	// optionally add a notFoundHandler
-	notFoundHandler: (req, res) => res.status(404).body(`${req.pathname} not found :(`),
+	notFoundHandler: (req, res) =>
+		res.status(404).body(`${req.pathname} not found :(`),
 	// optionally add an errorHandler
 	errorHandler: (_err, _req, res, httpErr) => {
 		// if NotFoundError, etc. was thrown
@@ -21,6 +22,7 @@ megalo
 			headers: { ['Content-Type']: 'text/html' },
 		});
 	})
+	.get('/json', (_req, res) => res.json({ json: true }))
 	.post('/', (_req, res) => {
 		res.body('Secret handler', { status: 200 });
 	})
@@ -43,7 +45,10 @@ megalo
 	.controller(
 		new Controller('/users')
 			.get('/', (_req, res) => res.body('user', { status: 200 }))
-			.get('/:id', (req, res) => res.body(`user id: ${req.params.id}`, { status: 200 }))
+			.get(
+				'/:id',
+				(req, res) => res.body(`user id: ${req.params.id}`, { status: 200 }),
+			),
 	);
 
 console.log(`Startup time: ${performance.now()}ms`);

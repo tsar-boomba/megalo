@@ -7,13 +7,16 @@ export class MegaloHeaders implements Headers {
 		} else if (baseOrHeaders.constructor === MegaloHeaders) {
 			this.#headers = new Map(baseOrHeaders.#headers);
 		} else if (baseOrHeaders.constructor === Headers) {
-			const headersList: [string, string][] =
-				(baseOrHeaders as any)[Object.getOwnPropertySymbols(baseOrHeaders)[1]] ?? [];
+			const headersList: [string, string][] = (baseOrHeaders as any)[
+				Object.getOwnPropertySymbols(baseOrHeaders)[1]
+			] ?? [];
 			this.#headers = new Map(headersList);
 		} else if (Array.isArray(baseOrHeaders)) {
 			this.#headers = new Map(baseOrHeaders as [string, string][]);
 		} else {
-			this.#headers = new Map(Object.entries(baseOrHeaders as Record<string, string>));
+			this.#headers = new Map(
+				Object.entries(baseOrHeaders as Record<string, string>),
+			);
 		}
 	}
 
@@ -40,7 +43,9 @@ export class MegaloHeaders implements Headers {
 	append(key: string, value: string) {
 		key = key.toLowerCase();
 		const curr = this.#headers.get(key);
-		curr ? this.#headers.set(key, curr.concat(`,${value.trim()}`)) : this.#headers.set(key, value.trim());
+		curr
+			? this.#headers.set(key, curr.concat(`,${value.trim()}`))
+			: this.#headers.set(key, value.trim());
 	}
 
 	entries(): IterableIterator<[string, string]> {
@@ -57,9 +62,12 @@ export class MegaloHeaders implements Headers {
 
 	forEach(
 		callbackfn: (key: string, value: string, parent: this) => void,
-		thisArg?: unknown
+		thisArg?: unknown,
 	): void {
-		this.#headers.forEach((key, value) => callbackfn(key, value, this), thisArg);
+		this.#headers.forEach(
+			(key, value) => callbackfn(key, value, this),
+			thisArg,
+		);
 	}
 
 	/**
@@ -82,16 +90,16 @@ export class MegaloHeaders implements Headers {
 		}
 	}
 
-	
 	clone(): MegaloHeaders {
 		return new MegaloHeaders(this);
 	}
-	
+
 	[Symbol.iterator]() {
 		return this.#headers.entries();
 	}
 
 	get [Symbol.toStringTag](): string {
-		return 'MegaloHeaders' + this.#headers.toString().replace('[object Map]', '');
+		return 'MegaloHeaders' +
+			this.#headers.toString().replace('[object Map]', '');
 	}
 }

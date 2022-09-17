@@ -1,6 +1,9 @@
 import { parse } from 'https://deno.land/std@0.155.0/flags/mod.ts';
 
-const { noServe, ...rest } = parse(Deno.args, { alias: { ['no-serve']: 'noServe' }, '--': true });
+const { noServe, ...rest } = parse(Deno.args, {
+	alias: { ['no-serve']: 'noServe' },
+	'--': true,
+});
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -17,7 +20,6 @@ const ohaListenProc = Deno.run({
 await ohaListenProc.status().then(() => listenProc.close());
 
 if (!noServe) {
-
 	const serveProc = Deno.run({
 		cmd: ['deno', 'run', '-A', '--unstable', Deno.args[0], '--serve'],
 		stdout: 'null',

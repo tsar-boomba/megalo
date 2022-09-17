@@ -76,9 +76,14 @@ export const cors = ({
 		['Access-Control-Allow-Credentials']: credentials.toString(),
 	};
 
-	exposeHeaders && (optionsHeaders['Access-Control-Expose-Headers'] = exposeHeaders?.join(','));
-	maxAge !== undefined && (optionsHeaders['Access-Control-Max-Age'] = maxAge.toFixed(0));
-	allowedIsString && (optionsHeaders['Access-Control-Allow-Origin'] = allowedOrigin);
+	exposeHeaders &&
+		(optionsHeaders['Access-Control-Expose-Headers'] = exposeHeaders?.join(
+			',',
+		));
+	maxAge !== undefined &&
+		(optionsHeaders['Access-Control-Max-Age'] = maxAge.toFixed(0));
+	allowedIsString &&
+		(optionsHeaders['Access-Control-Allow-Origin'] = allowedOrigin);
 	!allowedIsString && (optionsHeaders['Vary'] = 'Origin');
 
 	const originMatches = (origin: string): boolean => {
@@ -101,7 +106,9 @@ export const cors = ({
 					: 'false';
 			}
 
-			res.status(optionsSuccessStatus).body(undefined, { headers: optionsHeaders });
+			res.status(optionsSuccessStatus).body(undefined, {
+				headers: optionsHeaders,
+			});
 		});
 		const credentialsString = credentials.toString();
 		owner.addHook('preSend', (req, res) => {
@@ -111,7 +118,7 @@ export const cors = ({
 				const origin = req.headers.get('Origin') ?? '';
 				res.headers.set(
 					'Access-Control-Allow-Origin',
-					originMatches(origin) ? origin : 'false'
+					originMatches(origin) ? origin : 'false',
 				);
 				res.headers.append('Vary', 'Origin');
 			}

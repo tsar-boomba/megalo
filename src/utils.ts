@@ -14,12 +14,16 @@ import { MegaloRequest } from './types.ts';
  */
 const uriRe = /^(([^:\/?#]+):)?(\/\/([^\/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/;
 
-export const parseUrl = (url: string): { pathname?: string; rawQuery?: string } => {
+export const parseUrl = (
+	url: string,
+): { pathname?: string; rawQuery?: string } => {
 	const result = uriRe.exec(url);
 
 	let pathname = result?.[5];
 	// add trailing slash if needed then return
-	pathname = pathname ? (pathname.endsWith('/') ? pathname : pathname + '/') : undefined;
+	pathname = pathname
+		? (pathname.endsWith('/') ? pathname : pathname + '/')
+		: undefined;
 
 	const rawQuery = result?.[7];
 

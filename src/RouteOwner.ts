@@ -81,7 +81,7 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 	private route(
 		path: string | RegExp | PathnamePattern,
 		options: RouteConfig,
-		handler: Handler
+		handler: Handler,
 	): this {
 		// convert paths with : in it to url patterns
 		const isPattern = typeof path === 'string' && path.includes(':');
@@ -103,18 +103,32 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 			if (!existingRoute) {
 				const route = new Route(path);
 				this.regExpRoutes.set(strPath, route);
-				route.handlers.set(finalOptions.method, { handler, config: finalOptions });
+				route.handlers.set(finalOptions.method, {
+					handler,
+					config: finalOptions,
+				});
 			} else {
-				existingRoute.handlers.set(finalOptions.method, { handler, config: finalOptions });
+				existingRoute.handlers.set(finalOptions.method, {
+					handler,
+					config: finalOptions,
+				});
 			}
 		} else if (isPattern) {
-			const existingRoute = this.patternRoutes.get((path as PathnamePattern).pattern);
+			const existingRoute = this.patternRoutes.get(
+				(path as PathnamePattern).pattern,
+			);
 			if (!existingRoute) {
 				const route = new Route(path);
 				this.patternRoutes.set((path as PathnamePattern).pattern, route);
-				route.handlers.set(finalOptions.method, { handler, config: finalOptions });
+				route.handlers.set(finalOptions.method, {
+					handler,
+					config: finalOptions,
+				});
 			} else {
-				existingRoute.handlers.set(finalOptions.method, { handler, config: finalOptions });
+				existingRoute.handlers.set(finalOptions.method, {
+					handler,
+					config: finalOptions,
+				});
 			}
 		} else {
 			(path as string).endsWith('/') ? path : (path += '/');
@@ -122,28 +136,42 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 			if (!existingRoute) {
 				const route = new Route(path);
 				this.stringRoutes.set(path as string, route);
-				route.handlers.set(finalOptions.method, { handler, config: finalOptions });
+				route.handlers.set(finalOptions.method, {
+					handler,
+					config: finalOptions,
+				});
 			} else {
-				existingRoute.handlers.set(finalOptions.method, { handler, config: finalOptions });
+				existingRoute.handlers.set(finalOptions.method, {
+					handler,
+					config: finalOptions,
+				});
 			}
 		}
 
 		return this;
 	}
 
-	get(path: string | RegExp, options: Omit<RouteConfig, 'method'>, handler: Handler): this;
+	get(
+		path: string | RegExp,
+		options: Omit<RouteConfig, 'method'>,
+		handler: Handler,
+	): this;
 	get(path: string | RegExp, handler: Handler): this;
 	get(
 		path: string | RegExp,
 		optionsOrHandler: Handler | Omit<RouteConfig, 'method'>,
-		handler?: Handler
+		handler?: Handler,
 	): this {
 		return typeof optionsOrHandler === 'function'
 			? this.route(path, { method: 'GET' }, optionsOrHandler)
 			: this.route(path, { ...optionsOrHandler, method: 'GET' }, handler!);
 	}
 
-	post(path: string | RegExp, options: Omit<RouteConfig, 'method'>, handler: Handler): this;
+	post(
+		path: string | RegExp,
+		options: Omit<RouteConfig, 'method'>,
+		handler: Handler,
+	): this;
 	post(path: string | RegExp, handler: Handler): this;
 	/**
 	 * Must await request body until https://github.com/denoland/deno/issues/15813 is resolved
@@ -151,14 +179,18 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 	post(
 		path: string | RegExp,
 		optionsOrHandler: Handler | Omit<RouteConfig, 'method'>,
-		handler?: Handler
+		handler?: Handler,
 	): this {
 		return typeof optionsOrHandler === 'function'
 			? this.route(path, { method: 'POST' }, optionsOrHandler)
 			: this.route(path, { ...optionsOrHandler, method: 'POST' }, handler!);
 	}
 
-	put(path: string | RegExp, options: Omit<RouteConfig, 'method'>, handler: Handler): this;
+	put(
+		path: string | RegExp,
+		options: Omit<RouteConfig, 'method'>,
+		handler: Handler,
+	): this;
 	put(path: string | RegExp, handler: Handler): this;
 	/**
 	 * Must await request body until https://github.com/denoland/deno/issues/15813 is resolved
@@ -166,14 +198,18 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 	put(
 		path: string | RegExp,
 		optionsOrHandler: Handler | Omit<RouteConfig, 'method'>,
-		handler?: Handler
+		handler?: Handler,
 	): this {
 		return typeof optionsOrHandler === 'function'
 			? this.route(path, { method: 'PUT' }, optionsOrHandler)
 			: this.route(path, { ...optionsOrHandler, method: 'PUT' }, handler!);
 	}
 
-	patch(path: string | RegExp, options: Omit<RouteConfig, 'method'>, handler: Handler): this;
+	patch(
+		path: string | RegExp,
+		options: Omit<RouteConfig, 'method'>,
+		handler: Handler,
+	): this;
 	patch(path: string | RegExp, handler: Handler): this;
 	/**
 	 * Must await request body until https://github.com/denoland/deno/issues/15813 is resolved
@@ -181,43 +217,55 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 	patch(
 		path: string | RegExp,
 		optionsOrHandler: Handler | Omit<RouteConfig, 'method'>,
-		handler?: Handler
+		handler?: Handler,
 	): this {
 		return typeof optionsOrHandler === 'function'
 			? this.route(path, { method: 'PATCH' }, optionsOrHandler)
 			: this.route(path, { ...optionsOrHandler, method: 'PATCH' }, handler!);
 	}
 
-	delete(path: string | RegExp, options: Omit<RouteConfig, 'method'>, handler: Handler): this;
+	delete(
+		path: string | RegExp,
+		options: Omit<RouteConfig, 'method'>,
+		handler: Handler,
+	): this;
 	delete(path: string | RegExp, handler: Handler): this;
 	delete(
 		path: string | RegExp,
 		optionsOrHandler: Handler | Omit<RouteConfig, 'method'>,
-		handler?: Handler
+		handler?: Handler,
 	): this {
 		return typeof optionsOrHandler === 'function'
 			? this.route(path, { method: 'DELETE' }, optionsOrHandler)
 			: this.route(path, { ...optionsOrHandler, method: 'DELETE' }, handler!);
 	}
 
-	options(path: string | RegExp, options: Omit<RouteConfig, 'method'>, handler: Handler): this;
+	options(
+		path: string | RegExp,
+		options: Omit<RouteConfig, 'method'>,
+		handler: Handler,
+	): this;
 	options(path: string | RegExp, handler: Handler): this;
 	options(
 		path: string | RegExp,
 		optionsOrHandler: Handler | Omit<RouteConfig, 'method'>,
-		handler?: Handler
+		handler?: Handler,
 	): this {
 		return typeof optionsOrHandler === 'function'
 			? this.route(path, { method: 'OPTIONS' }, optionsOrHandler)
 			: this.route(path, { ...optionsOrHandler, method: 'OPTIONS' }, handler!);
 	}
 
-	any(path: string | RegExp, options: Omit<RouteConfig, 'method'>, handler: Handler): this;
+	any(
+		path: string | RegExp,
+		options: Omit<RouteConfig, 'method'>,
+		handler: Handler,
+	): this;
 	any(path: string | RegExp, handler: Handler): this;
 	any(
 		path: string | RegExp,
 		optionsOrHandler: Handler | Omit<RouteConfig, 'method'>,
-		handler?: Handler
+		handler?: Handler,
 	): this {
 		return typeof optionsOrHandler === 'function'
 			? this.route(path, { method: 'ANY' }, optionsOrHandler)
@@ -254,12 +302,17 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 		this.patternArr = this.patternArr
 			? this.patternArr
 			: Array.from(this.patternRoutes.values());
-		this.regExpArr = this.regExpArr ? this.regExpArr : Array.from(this.regExpRoutes.values());
+		this.regExpArr = this.regExpArr
+			? this.regExpArr
+			: Array.from(this.regExpRoutes.values());
 
 		// init hooks
-		this.preHandleHandlers = (this.hooks.get('preHandle') ?? []) as Hooks['preHandle'][];
-		this.postHandleHandlers = (this.hooks.get('postHandle') ?? []) as Hooks['postHandle'][];
-		this.preRouteHandlers = (this.hooks.get('preRoute') ?? []) as Hooks['preRoute'][];
+		this.preHandleHandlers =
+			(this.hooks.get('preHandle') ?? []) as Hooks['preHandle'][];
+		this.postHandleHandlers =
+			(this.hooks.get('postHandle') ?? []) as Hooks['postHandle'][];
+		this.preRouteHandlers =
+			(this.hooks.get('preRoute') ?? []) as Hooks['preRoute'][];
 
 		this.firstReq = false;
 	}
@@ -267,7 +320,7 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 	async handle(
 		req: MegaloRequest,
 		res: MegaloResponse,
-		pathname = req.pathname
+		pathname = req.pathname,
 	): Promise<void> {
 		const method = req.method.toUpperCase() as Methods;
 
@@ -319,7 +372,10 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 		for (let i = 0; i < this.patternArr.length; i += 1) {
 			const route = this.patternArr[i];
 			const patternResult = (route.path as PathnamePattern).exec(pathname);
-			if (patternResult && (route.handlers.get(method) || route.handlers.get('ANY'))) {
+			if (
+				patternResult &&
+				(route.handlers.get(method) || route.handlers.get('ANY'))
+			) {
 				req.params = patternResult;
 				return this.runHandler(req, res, route);
 			}
@@ -331,16 +387,22 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 			if (
 				(route.path as RegExp).test(pathname) &&
 				(route.handlers.get(method) || route.handlers.get('ANY'))
-			)
+			) {
 				return this.runHandler(req, res, route);
+			}
 		}
 
 		const wildCard = this.stringRoutes.get('*');
-		if (wildCard && (wildCard.handlers.get(method) || wildCard.handlers.get('ANY'))) {
+		if (
+			wildCard &&
+			(wildCard.handlers.get(method) || wildCard.handlers.get('ANY'))
+		) {
 			return this.runHandler(req, res, wildCard);
 		}
 
-		this.notFoundHandler? this.notFoundHandler(req, res) :  res.status(404).body(undefined);
+		this.notFoundHandler
+			? this.notFoundHandler(req, res)
+			: res.status(404).body(`Could not ${method} ${req.pathname}`);
 	}
 
 	/**
@@ -349,7 +411,7 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 	protected async runHandler(
 		req: MegaloRequest,
 		res: MegaloResponse,
-		route: Route
+		route: Route,
 	): Promise<void> {
 		try {
 			// run preHandleHooks
@@ -384,7 +446,11 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 		}
 	}
 
-	protected handleErr(err: unknown, req: MegaloRequest, res: MegaloResponse): void | Promise<void> {
+	protected handleErr(
+		err: unknown,
+		req: MegaloRequest,
+		res: MegaloResponse,
+	): void | Promise<void> {
 		let httpErr: HttpError | undefined;
 		if (err instanceof HttpError) httpErr = err;
 		if (this.errorHandler) return this.errorHandler(err, req, res, httpErr);
