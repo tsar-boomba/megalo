@@ -11,24 +11,30 @@ const listenProc = Deno.run({
 	cmd: ['deno', 'run', '-A', Deno.args[0]],
 	stdout: 'null',
 });
-await wait(500);
+await wait(5000);
 const ohaListenProc = Deno.run({
 	cmd: ['oha', '-z', '10s', '--no-tui', ...rest['--'], Deno.args[1]],
 	stdout: 'inherit',
 });
 
-await ohaListenProc.status().then(() => listenProc.close());
+await ohaListenProc.status().then(() => {
+	listenProc.kill('SIGTERM');
+	listenProc.close();
+});
 
 if (!noServe) {
 	const serveProc = Deno.run({
 		cmd: ['deno', 'run', '-A', '--unstable', Deno.args[0], '--serve'],
 		stdout: 'null',
 	});
-	await wait(500);
+	await wait(5000);
 	const ohaServeProc = Deno.run({
 		cmd: ['oha', '-z', '10s', '--no-tui', ...rest['--'], Deno.args[1]],
 		stdout: 'inherit',
 	});
 
-	ohaServeProc.status().then(() => serveProc.close());
+	ohaServeProc.status().then(() => {
+		serveProc.kill('SIGTERM');
+		serveProc.close();
+	});
 }
