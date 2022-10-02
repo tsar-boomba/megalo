@@ -53,7 +53,7 @@ megalo
 
 console.log(`Startup time: ${performance.now()}ms`);
 
-const { serve } = parse(Deno.args, { alias: { s: 'serve' } });
+const { serve, addr, port } = parse(Deno.args, { alias: { s: 'serve', a: 'addr', p: 'port' } });
 serve
-	? megalo.serve({ port: 9000, hostname: '127.0.0.1' })
-	: megalo.listen({ port: 9000, hostname: '127.0.0.1' });
+	? megalo.serve({ port: parseInt(port) || 9000, hostname: addr ?? '127.0.0.1' })
+	: megalo.listen({ port: parseInt(port) || 9000, hostname: addr ?? '127.0.0.1' });
