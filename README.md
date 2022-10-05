@@ -65,6 +65,10 @@ Use `--allow-hrtime` for more precise `performance.now()`
 deno run --allow-net --allow-hrtime --unstable server.ts
 ```
 
+## Benchmarks
+
+[HTTP server benchmarks](https://github.com/denosaurs/bench#readme)
+
 ## Route resolution
 
 Routes are resolved in this order
