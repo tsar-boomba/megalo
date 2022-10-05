@@ -247,7 +247,6 @@ export class Megalo extends RouteOwner<MegaloHooks, MegaloConfigProperties> {
 			(paths, path) => ({ ...paths, [path.path]: path.config }),
 			{}
 		);
-		console.log(pathDocs);
 		const docs: OpenAPIObject = {
 			...options!,
 			paths: mergedPaths,

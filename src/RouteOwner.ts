@@ -434,7 +434,6 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks, Config extend
 
 		for (const [path, route] of this.stringRoutes) {
 			const pathItem: PathItemObject = {};
-			console.log({ path, route })
 			const prefixed = pathnamePrefix.concat(path);
 
 			const handlers = route.handlers.entries();
