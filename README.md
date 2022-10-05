@@ -136,7 +136,7 @@ megalo.listen({ port: 9000, hostname: '127.0.0.1' });
 
 ## OpenAPI Support
 
-Megalo now has support for defining OpenAPI Documentation in your code. check out `openApiExample.ts` for a small example of using it.
+Megalo now has support for defining OpenAPI Documentation in your code. check out `openApiExample.ts` for a small example of using it. You can check out the [example deployment](https://tsar-boomba-megalo.deno.dev/swagger).
 
 ## Notes
 

@@ -2,6 +2,8 @@ import { Schema, Field, refOf } from './openapi/mod.ts'; // https://deno.land/x/
 import { swaggerUI } from './plugins/swaggerUI.ts'; // https://deno.land/x/megalo/plugins/swaggerUI.ts
 import { Megalo } from './mod.ts'; // https://deno.land/x/megalo/mod.ts
 
+const isProd = Deno.env.get('DENO_DEPLOYMENT_ID');
+
 @Schema()
 class User {
 	@Field({ type: 'string' })
@@ -17,6 +19,7 @@ const megalo = new Megalo({
 			version: '1.0.0',
 			description: 'A Megalo API using OpenAPI.',
 		},
+		servers: isProd ? [{ url: 'https://tsar-boomba-megalo.deno.dev' }] : undefined,
 	},
 	plugins: [swaggerUI({ path: '/swagger' })],
 });
