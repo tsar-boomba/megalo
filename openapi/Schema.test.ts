@@ -23,7 +23,11 @@ Deno.test('String Field', () => {
 				minLength: undefined,
 				nullable: undefined,
 				readOnly: undefined,
-				writeOnly: undefined
+				writeOnly: undefined,
+				deprecated: undefined,
+				description: undefined,
+				example: undefined,
+				externalDocs: undefined,
 			},
 		},
 		additionalProperties: undefined,
