@@ -11,8 +11,7 @@ import { cors } from 'https://deno.land/x/megalo/plugins/cors.ts';
 
 const megalo = new Megalo({
 	// optionally add a notFoundHandler
-	notFoundHandler: (req, res) =>
-		res.status(404).body(`${req.pathname} not found :(`),
+	notFoundHandler: (req, res) => res.status(404).body(`${req.pathname} not found :(`),
 	// optionally add an errorHandler
 	errorHandler: (_err, _req, res, httpErr) => {
 		// if NotFoundError, etc. was thrown
@@ -51,10 +50,7 @@ megalo
 	.controller(
 		new Controller('/users')
 			.get('/', (_req, res) => res.body('user', { status: 200 }))
-			.get(
-				'/:id',
-				(req, res) => res.body(`user id: ${req.params.id}`, { status: 200 }),
-			),
+			.get('/:id', (req, res) => res.body(`user id: ${req.params.id}`, { status: 200 }))
 	);
 
 console.log(`Startup time: ${performance.now()}ms`);
@@ -73,27 +69,27 @@ deno run --allow-net --allow-hrtime --unstable server.ts
 
 Routes are resolved in this order
 
-- string literal ex. `"/sus"`
-- controllers ex. `new Controller("/users")`
-- patterns ex. `"/users/:id"`
-- regex ex. `/^.*\/regex\/.*\/?$/`
-- wildcard (You can only have one of these per method) `"*"`
-- notFoundHandler
+-   string literal ex. `"/sus"`
+-   controllers ex. `new Controller("/users")`
+-   patterns ex. `"/users/:id"`
+-   regex ex. `/^.*\/regex\/.*\/?$/`
+-   wildcard (You can only have one of these per method) `"*"`
+-   notFoundHandler
 
 ## Hooks
 
 You can use hooks to run functions when certain lifecycle events occur. Hooks
 can be used on the Megalo instance or Controller instance.
 
-- preRoute: runs before pathname is evaluated and handler is chosen
-- preHandle: runs directly before handler
-- postHandle: runs directly after handler (may change in the future)
+-   preRoute: runs before pathname is evaluated and handler is chosen
+-   preHandle: runs directly before handler
+-   postHandle: runs directly after handler (may change in the future)
 
 The megalo instance has some exclusive hooks
 
-- preParse: runs before anything is done, right when request is received
-- preSend: run directly before response is sent to client, last chance to add
-  headers or whatever
+-   preParse: runs before anything is done, right when request is received
+-   preSend: run directly before response is sent to client, last chance to add
+    headers or whatever
 
 This is an example on how to use hooks. If you return the res from the hook it
 will be sent early.
@@ -134,10 +130,12 @@ megalo.get((req) => {
 megalo.listen({ port: 9000, hostname: '127.0.0.1' });
 ```
 
+## OpenAPI Support
+
+Megalo now has support for defining OpenAPI Documentation in your code. check out `openApiExample.ts` for a small example of using it.
+
 ## Notes
 
 If using serve / flash instead of listen, until
 https://github.com/denoland/deno/issues/15813 is resolved, in all POST, PUT, and
-PATCH routes you MUST await the body or else deno will panic. Also, do not use
-this in production as any POST, PUT, or PATCH request will crash the server,
-until this bug is fixed.
+PATCH routes you MUST await the body or else deno will panic.

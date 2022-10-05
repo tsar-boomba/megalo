@@ -12,8 +12,9 @@ import {
 } from './types.ts';
 import { HttpError } from './HttpError.ts';
 import { MegaloResponse } from './MegaloResponse.ts';
+import { PathItemObject } from '../openapi/types.ts';
 
-export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
+export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks, Config extends object = {}> {
 	protected parseQuery: boolean;
 	protected notFoundHandler?: Handler;
 	protected errorHandler?: ErrorHandler;
@@ -22,14 +23,14 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 	protected regExpRoutes: Map<string, Route> = new Map();
 	protected patternRoutes: Map<string, Route> = new Map();
 	protected hooks: Map<keyof Hooks, Hooks[keyof Hooks][]> = new Map();
+	protected config: RouteOwnerConfig & Config;
 
-	constructor(config: RouteOwnerConfig<Hooks>) {
+	constructor(config: RouteOwnerConfig & Config) {
+		this.config = config;
 		this.notFoundHandler = config.notFoundHandler;
 		this.errorHandler = config.errorHandler;
 		// default to true
 		this.parseQuery = config.parseQuery ?? true;
-
-		config.plugins?.forEach((plugin) => plugin(this));
 	}
 
 	/**
@@ -418,5 +419,131 @@ export class RouteOwner<Hooks extends DefaultHooks = DefaultHooks> {
 		} else {
 			res.status(500).body('An internal server error ocurred.');
 		}
+	}
+
+	protected paramParseRe = /:([^\/]+)/g;
+	private pathItems!: { path: string; config: PathItemObject }[];
+
+	/**
+	 * Generates openapi docs for routes owned by this object
+	 */
+	protected pathDocs(pathnamePrefix = ''): { path: string; config: PathItemObject }[] {
+		if (this.pathItems) return this.pathItems;
+
+		const pathItems: { path: string; config: PathItemObject }[] = [];
+
+		for (const [path, route] of this.stringRoutes) {
+			const pathItem: PathItemObject = {};
+			console.log({ path, route })
+			const prefixed = pathnamePrefix.concat(path);
+
+			const handlers = route.handlers.entries();
+
+			for (const [method, handler] of handlers) {
+				// openapi doesn't support any method (makes sense)
+				if (method === 'ANY') continue;
+
+				const lowerMethod = method.toLowerCase();
+
+				let openapiOptions = handler.config.openapi;
+
+				if (!openapiOptions)
+					openapiOptions = {
+						responses: {
+							default: {
+								description: 'Default response',
+							},
+						},
+					};
+
+				// @ts-ignore: ignore this
+				pathItem[lowerMethod] = openapiOptions;
+			}
+
+			pathItems.push({ path: prefixed, config: pathItem });
+		}
+
+		for (const [path, route] of this.patternRoutes) {
+			const pathItem: PathItemObject = {};
+			const prefixed = pathnamePrefix.concat(path);
+			// parse param names out of path
+			const result = this.paramParseRe.exec(prefixed);
+
+			if (!result || result?.length <= 1)
+				throw new Error(
+					`Couldn't parse any parameters from ${path}. Route may be deformed. Please use a string route if you don't need parameters.`
+				);
+
+			const parameters = result.slice(1);
+
+			const handlers = route.handlers.entries();
+
+			for (const [method, handler] of handlers) {
+				// openapi doesn't support any method (makes sense)
+				if (method === 'ANY') continue;
+
+				const lowerMethod = method.toLowerCase();
+
+				let openapiOptions = handler.config.openapi;
+
+				if (!openapiOptions) {
+					openapiOptions = {
+						responses: {
+							default: {
+								description: 'Default response',
+							},
+						},
+						parameters: parameters.map((param) => ({
+							in: 'path',
+							required: true,
+							name: param,
+							schema: { type: '{}' },
+						})),
+					};
+				} else {
+					if (!openapiOptions.parameters) {
+						openapiOptions.parameters = parameters.map((param) => ({
+							in: 'path',
+							required: true,
+							name: param,
+							schema: { type: '{}' },
+						}));
+					} else {
+						parameters.forEach((param) => {
+							if (
+								!openapiOptions!.parameters!.some(
+									(paramObj) => paramObj.in === 'path' && paramObj.name === param
+								)
+							) {
+								// path param missing in openapi definition
+								console.warn(
+									`Path: '${path}' openapi definition is missing parameter: '${param}'. Please add it to improve your openapi documentation.`
+								);
+								// add a default definition for user
+								openapiOptions!.parameters!.push({
+									in: 'path',
+									required: true,
+									name: param,
+									schema: { type: '{}' },
+								});
+							}
+						});
+					}
+				}
+
+				// @ts-ignore: ignore this
+				pathItem[lowerMethod] = openapiOptions;
+			}
+
+			pathItems.push({ path: prefixed.replace(this.paramParseRe, '{$1}'), config: pathItem });
+		}
+
+		// add controller's docs to this
+		for (const controller of this.controllers) {
+			pathItems.push(...controller.pathDocs());
+		}
+
+		this.pathItems = pathItems;
+		return pathItems;
 	}
 }

@@ -1,6 +1,5 @@
-import { RouteOwner } from '../src/RouteOwner.ts';
-import { DefaultHooks } from '../src/types.ts';
+import { Megalo } from '../src/Megalo.ts';
 
-export type Plugin<Hooks extends DefaultHooks> = (
-	owner: RouteOwner<Hooks>,
+export type Plugin = (
+	instance: Megalo,
 ) => void | Promise<void>;

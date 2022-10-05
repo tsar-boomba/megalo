@@ -1,25 +1,37 @@
 import { HttpError } from './HttpError.ts';
 import { Plugin } from '../plugins/types.ts';
 import { MegaloResponse } from './MegaloResponse.ts';
+import { ExternalDocsObject, InfoObject, OperationObject, SecurityRequirementObject, ServerObject, TagObject } from '../openapi/types.ts';
 
-export type RouteOwnerConfig<Hooks extends DefaultHooks> = {
+export type RouteOwnerConfig = {
 	errorHandler?: ErrorHandler;
 	notFoundHandler?: Handler;
-	plugins?: Plugin<Hooks>[];
 	/** Whether or not to parse query string into object, defaults to true */
 	parseQuery?: boolean;
 };
 
-export type MegaloConfig = {} & RouteOwnerConfig<MegaloHooks>;
+export type MegaloConfigProperties = {
+	openapi?: {
+		info: InfoObject;
+		servers?: ServerObject[];
+		security?: SecurityRequirementObject[];
+		tags?: TagObject[];
+		externalDocs?: ExternalDocsObject;
+	};
+	plugins?: Plugin[];
+};
+
+export type MegaloConfig =  RouteOwnerConfig;
 
 export type RouteConfig =
 	& {
+		openapi?: OperationObject;
 		metadata?: Record<string, any>;
 		/** What HTTP method this route will handle */
 		method: Methods;
 	}
 	& Omit<
-		RouteOwnerConfig<never>,
+		RouteOwnerConfig,
 		'errorHandler' | 'notFoundHandler' | 'plugins'
 	>;
 
@@ -63,7 +75,7 @@ export type Methods =
 export type Handler = (
 	req: MegaloRequest,
 	res: MegaloResponse,
-) => Promise<void> | void;
+) => Promise<any> | any;
 
 export type ErrorHandler = (
 	err: unknown,

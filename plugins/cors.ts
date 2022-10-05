@@ -1,4 +1,4 @@
-import { MegaloHooks } from '../src/types.ts';
+import { Megalo } from '../mod.ts';
 import { Plugin } from './types.ts';
 
 export type CorsPluginOptions = {
@@ -63,7 +63,7 @@ export const cors = ({
 	maxAge,
 	methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD'],
 	optionsSuccessStatus = 204,
-}: CorsPluginOptions): Plugin<MegaloHooks> => {
+}: CorsPluginOptions): Plugin<Megalo> => {
 	methods = methods.map((m) => m.toUpperCase());
 	const allowedIsString = typeof allowedOrigin === 'string';
 	const allowedIsArray = Array.isArray(allowedOrigin);
